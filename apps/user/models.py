@@ -7,16 +7,16 @@ from .enums import Visibility, Language
 class User(AbstractBaseUser):
     username = models.CharField(max_length=50, unique=True)
 
-    profile_img = models.CharField(max_length=200, unique=True, null=True)
+    profile_img = models.FileField(max_length=200, null=True)
 
-    banner = models.CharField(max_length=200, unique=True, null=True)
+    banner = models.FileField(max_length=200, null=True)
 
     visibility = models.IntegerField(
         choices=[(tag.value, tag.name) for tag in Visibility],
         default=Visibility.PUBLIC.value
     )
 
-    status = models.BooleanField(default=True)
+    is_connected = models.BooleanField(default=True)
 
     language = models.CharField(
         choices=Language.choices,
