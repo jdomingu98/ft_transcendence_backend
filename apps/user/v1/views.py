@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.contrib.auth.hashers import make_password
 
 from ..enums import Visibility
 
@@ -17,10 +18,11 @@ class Register(APIView):
         if password != passwordRepeat:
             return Response({'message': 'passwords do not match'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # TODO: Store password hashed
+        hashed_password = make_password(password)
+
         user = User(
             username=name,
-            password=password,
+            password=hashed_password,
             language='es',
             visibility=Visibility.PUBLIC.value
         )
