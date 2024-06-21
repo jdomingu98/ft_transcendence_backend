@@ -1,33 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.auth.hashers import make_password
+from .serializers import RegisterSerializer
 
-from ..enums import Visibility
-
-from apps.user.models import User
 
 class Register(APIView):
 
     def post(self, request):
-        # TODO: Review params for endpoint
-        name = request.data.get('name')
-        password = request.data.get('password')
-        passwordRepeat = request.data.get('passwordRepeat')
-
-        if password != passwordRepeat:
-            return Response({'message': 'passwords do not match'}, status=status.HTTP_400_BAD_REQUEST)
-
-        hashed_password = make_password(password)
-
-        user = User(
-            username=name,
-            password=hashed_password,
-            language='es',
-            visibility=Visibility.PUBLIC.value
-        )
-        user.save()
-        return Response({'message': 'you are register'}, status=status.HTTP_200_OK)
-
-
-
+        register_serializer = RegisterSerializer(data=request.data)
+        register_serializer.is_valid(raise_exception=True)        
+        register_serializer.save()
+        return Response(status=status.HTTP_201_CREATED)
