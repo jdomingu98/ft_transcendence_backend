@@ -1,13 +1,8 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.generics import CreateAPIView
 from .serializers import RegisterSerializer
+from ..models import User
 
 
-class Register(APIView):
-
-    def post(self, request):
-        register_serializer = RegisterSerializer(data=request.data)
-        register_serializer.is_valid(raise_exception=True)        
-        register_serializer.save()
-        return Response(status=status.HTTP_201_CREATED)
+class Register(CreateAPIView):
+    serializer_class = RegisterSerializer
+    queryset = User.objects.all()
