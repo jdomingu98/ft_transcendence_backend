@@ -29,9 +29,13 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Passwords do not match")
         return data
     
-class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=50)
-    password = serializers.CharField(write_only=True)
+class LoginSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'password',
+        )
 
     def validate(self, data):
         if not User.objects.filter(username=data['username']).exists():
