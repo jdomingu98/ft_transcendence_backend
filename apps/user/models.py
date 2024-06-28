@@ -28,5 +28,3 @@ class User(AbstractBaseUser):
 
     USERNAME_FIELD = 'username'
     objects = BaseUserManager()
-
-
