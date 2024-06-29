@@ -3,7 +3,8 @@ from django.contrib.auth.hashers import make_password
 from ..models import User
 
 class RegisterSerializer(serializers.ModelSerializer):
-    repeat_password = serializers.CharField(max_length=255)
+    repeat_password = serializers.CharField(max_length=255, write_only=True)
+    password = serializers.CharField(max_length=255, write_only=True)
 
     class Meta:
         model = User
