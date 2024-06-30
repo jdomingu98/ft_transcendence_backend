@@ -26,4 +26,9 @@ jobs:
         pip install -r requirements.txt
     - name: Run Tests
       run: |
+        python manage.py migrate
         python manage.py test
+      env:
+        DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+        DB_NAME: ${{ secrets.DB_NAME }}
+        DB_ENGINE: ${{ secrets.DB_ENGINE }}
