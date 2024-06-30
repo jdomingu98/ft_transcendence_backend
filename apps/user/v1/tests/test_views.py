@@ -19,6 +19,9 @@ class RegisterViewTest(APITestCase):
         self.should_return_201()
         self.assertEqual(User.objects.count(), 1)
         self.assertEqual(User.objects.get().username, 'testuser')
+        self.assertNotIn('password', self.response.data)
+        self.assertNotIn('repeat_password', self.response.data)
+
 
     def test_register_user_passwords_do_not_match(self):
         data = {
