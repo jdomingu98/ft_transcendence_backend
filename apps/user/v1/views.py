@@ -10,7 +10,6 @@ class Register(CreateAPIView):
     serializer_class = RegisterSerializer
     queryset = User.objects.all()
 
-
 class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
