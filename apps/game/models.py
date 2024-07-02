@@ -6,7 +6,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 class Statistics(models.Model):
     user = models.OneToOneField('user.User', on_delete=models.CASCADE)
 
-    max_streak = models.IntegerField(default=100, validators=[MinValueValidator(0), MaxValueValidator(100)])
+    max_streak = models.IntegerField(default=0)
 
     invididual_win_rate = models.IntegerField(default=100, validators=[MinValueValidator(0), MaxValueValidator(100)])
 
@@ -25,4 +25,6 @@ class Statistics(models.Model):
     total_goals_against = models.IntegerField(default=0)
 
     total_goals_stopped = models.IntegerField(default=0)
+
+
 
