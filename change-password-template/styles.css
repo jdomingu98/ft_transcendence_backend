@@ -1,0 +1,322 @@
+body {
+    margin: 0;
+    background-color: #000235;
+    font-family: 'Aldrich';
+    height: 100%;
+}
+
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100%;
+}
+
+
+/*Init card to change password*/
+
+.card {
+    background: rgb(122,221,227);
+    background: linear-gradient(56deg, rgba(122,221,227,1) 0%, rgba(179,239,242,1) 13%, rgba(192,188,188,1) 95%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; 
+    width: 38%;
+    min-height: 100vh; 
+}
+
+.title-card {
+    color: #10054D;
+    font-size: 3rem;
+    min-width: 300px;
+    font-weight: 200;
+    letter-spacing: 3px;
+    line-height: 3.7rem;
+    text-align: center;
+    margin-top: 3.1rem;
+}
+
+
+.img-card{
+    width: 300px;
+    max-width: 320px;
+    height: auto;
+}
+
+
+.change-password-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 2.5rem;
+    text-align: center;
+    flex-grow: 1;
+    margin-bottom: 2rem;
+}
+
+#btn-password {
+    padding: 0.7rem 1rem;
+    background-color: #26C6DA;
+    border-radius: 10px;
+    border: none;
+    color: #fff;
+    font-size: 1.3rem;
+    cursor: pointer;
+}
+
+
+.footer-section{
+    padding: 1rem 0;
+    width: 100%;
+    background-color: #30016C;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    text-align: center;
+}
+
+.footer-title {
+    color: #fff;
+    font-size: 1rem;
+    text-transform: uppercase;
+}
+
+.footer-links {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    gap: 3rem;
+}
+
+.footer-links a{
+    text-decoration: none;
+    color: #ffff;    
+}
+
+
+
+/*Overlay to diffuse the background and the card*/
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px);
+    z-index: 5;
+}
+
+
+
+/*Styles for the modal form that appearwhen we click the btn*/
+.modal-form{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: start;
+    text-align: center;
+
+    background: linear-gradient(#0e0f53da, #1b0267f5) padding-box,
+    linear-gradient(145deg, transparent 35%,#1cceff, #dadfdf) border-box;
+    padding: 4rem;
+    border-radius: 10px;
+    z-index: 10;
+    border: 2px solid transparent;
+    background-size: 200% 200%;
+    gap: 3rem;
+    animation: gradient 8s ease infinite;
+}
+
+
+#change-password-form{
+    padding: 3rem;
+}
+
+.title-form{
+    margin-bottom: 20px;
+    font-size: 3rem;
+    animation: fadeIn 1s ease-in-out;
+    color: #ffff;
+}
+
+.input-group {
+    width: 100%;
+    position: relative;
+    margin-bottom: 15px;
+    animation: slideIn 1s ease-in-out;
+}
+
+.input-group {
+    position: relative;
+  }
+
+.input-group input {
+    width: 100%;
+    padding: 10px 5px;
+    font-size: 16px;
+    color: #fff;
+    margin-bottom: 30px;
+    border: none;
+    border-bottom: 1px solid #06d6fa;
+    outline: none;
+    background: transparent;
+}
+
+.input-group label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 10px 0;
+    font-size: 16px;
+    color: #fff;
+    pointer-events: none;
+    transition: .5s;
+}
+
+.input-group input:focus ~ label,
+.input-group input:valid ~ label {
+    top: -20px;
+    left: 0;
+    color: #bdb8b8;
+    font-size: 12px;
+}
+
+.show-password-checkbox{
+    color: #ffff;
+}
+
+
+.btn-form {
+    margin-top: 3rem;
+    position: relative; 
+    border: 1px solid #06d6fa;
+    border-radius: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-size: 1.2rem;
+    color: white;
+    cursor: pointer;
+    padding: 10px 20px;
+    overflow: hidden;
+    z-index: 1;
+    background: transparent;
+    transition: transform linear 0.1s;
+    padding: 0.7rem 3.5rem;
+}
+
+.btn-form::before {
+    content: ''; 
+    position: absolute;
+    top: 0;
+    left: 0;
+    
+    width: 100%;
+    height: 100%;
+    background: rgb(21, 0, 161); 
+    background: linear-gradient(122deg, rgb(143, 217, 230) 52%, rgb(95, 108, 207) 96%);
+    z-index: -1;
+    transform: translateX(-100%); 
+    transition: transform 0.5s ease-out; 
+}
+
+.btn-form:hover {
+    color: white;
+    transform: translateY(-4px); 
+}
+
+.btn-form:hover::before {
+    transform: translateX(0);
+}
+
+
+/*Class to manipulate with js*/
+.hidden{
+    display: none;
+}
+
+
+/*Transitions*/
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-100px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes inputFadeIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+
+/*Media querys doing the page responsive*/
+@media (max-width: 988px) {
+    .card {
+        width: 50%;
+    }
+
+    .title-card{
+        font-size: 1.8rem;
+        line-height: 2.2rem;
+    }
+
+    .img-card {
+        width: 70%;
+        margin-bottom: 2rem;
+    }
+
+    .btn-password {
+        font-size: 1.2rem;
+    }
+
+    .footer-section{
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .footer-title {
+        font-size: 1rem;
+    }
+
+    .footer-link {
+        font-size: 0.8rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+    }
+}
