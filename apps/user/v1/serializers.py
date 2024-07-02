@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth import authenticate
 from ..models import User
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -28,3 +29,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         if data['password'] != data['repeat_password']:
             raise serializers.ValidationError("Passwords do not match")
         return data
+    
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()
+
+    def validate(self, data):
+        user = authenticate(username=data['username'], password=data['password'])
+        if user is None:
+            raise serializers.ValidationError("Invalid username/password.")
+        return user
