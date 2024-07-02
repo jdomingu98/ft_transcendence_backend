@@ -25,6 +25,3 @@ class Statistics(models.Model):
     total_goals_against = models.IntegerField(default=0)
 
     total_goals_stopped = models.IntegerField(default=0)
-
-
-
