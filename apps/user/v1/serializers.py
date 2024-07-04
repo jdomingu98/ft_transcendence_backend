@@ -94,3 +94,27 @@ class LogoutSerializer(serializers.Serializer):
         except RefreshToken.DoesNotExist as e:
             raise serializers.ValidationError("Invalid token") from e
         return data
+
+    
+    
+class ChangePasswordSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+
+    def validate(self, data):
+        user = authenticate(username=data['username'], password=data['old_password'])
+        if user is None:
+            raise serializers.ValidationError("Invalid username/password.")
+        return data
+
+    def validate_old_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Incorrect Password.")
+        return value
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data['new_password'])
+        instance.save()
+        return instance

@@ -97,3 +97,14 @@ class LogoutView(APIView):
             refresh_token.delete()
             return Response(status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ChangePasswordView(APIView):
+
+    #permission_classes = [IsAuthenticated]
+    def patch(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            user = serializer.validated_data
+            return Response({"message": "Password change suscessfully."}, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

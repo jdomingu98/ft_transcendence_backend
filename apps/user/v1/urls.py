@@ -16,4 +16,5 @@ urlpatterns = [
     path("refresh/", RefreshTokenView.as_view()),
     path("me/", MeView.as_view()),
     path("logout/", LogoutView.as_view()),
+    re_path(r'^change-password/$', ChangePasswordView.as_view()),
 ]
