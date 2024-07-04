@@ -39,3 +39,14 @@ class LoginSerializer(serializers.Serializer):
         if user is None:
             raise serializers.ValidationError("Invalid username/password.")
         return user
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    username_or_email = serializers.CharField()
+
+    def validate(self, data):
+        user = User.objects.filter(username=data['username_or_email']).first()
+        if not user:
+            user = User.objects.filter(email=data['username_or_email']).first()
+        if not user:
+            raise serializers.ValidationError("No user with this username/email address has been found.")
+        return data
