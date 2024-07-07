@@ -7,6 +7,8 @@ from .enums import Visibility, Language
 class User(AbstractBaseUser):
     username = models.CharField(max_length=50, unique=True)
 
+    email = models.EmailField(max_length=255, unique=True)
+
     profile_img = models.FileField(max_length=200, null=True)
 
     banner = models.FileField(max_length=200, null=True)
@@ -26,3 +28,5 @@ class User(AbstractBaseUser):
 
     USERNAME_FIELD = 'username'
     objects = BaseUserManager()
+
+
