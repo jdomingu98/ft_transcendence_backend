@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'apps.user',
+    'apps.game',
 ]
 
 MIDDLEWARE = [
@@ -135,3 +136,9 @@ MEDIA_ROOT = 'media/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Email settings
+SMTP_SERVER = env('SMTP_SERVER')
+SMTP_PORT = env('SMTP_PORT')
+SMTP_EMAIL = env('SMTP_EMAIL')
+SMTP_PASSWORD = env('SMTP_PASSWORD')
