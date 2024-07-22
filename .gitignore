@@ -161,3 +161,7 @@ cython_debug/
 
 # folder for storing db files
 media/
+
+# JWT keys
+jwtRS256.key
+jwtRS256.key.pub
