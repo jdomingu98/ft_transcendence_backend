@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
 from ..models import User
+from django.db.models import Q
 
 class RegisterSerializer(serializers.ModelSerializer):
     repeat_password = serializers.CharField(max_length=255, write_only=True)
@@ -40,13 +41,5 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid username/password.")
         return user
 
-class PasswordResetRequestSerializer(serializers.Serializer):
+class PasswordResetSerializer(serializers.Serializer):
     username_or_email = serializers.CharField()
-
-    def validate(self, data):
-        user = User.objects.filter(username=data['username_or_email']).first()
-        if not user:
-            user = User.objects.filter(email=data['username_or_email']).first()
-        if not user:
-            raise serializers.ValidationError("No user with this username/email address has been found.")
-        return data
