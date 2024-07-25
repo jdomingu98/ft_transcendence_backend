@@ -1,8 +1,8 @@
-from django.urls import re_path
+from django.urls import path
 from .views import Register, LoginView, PasswordResetView
 
 urlpatterns = [
-    re_path(r'^register/$', Register.as_view()),
-    re_path(r'^login/$', LoginView.as_view()),
-    re_path(r'^pass-reset', PasswordResetView.as_view()),
+    path('register/', Register.as_view()),
+    path('login/', LoginView.as_view()),
+    path('pass-reset', PasswordResetView.as_view()),
 ]

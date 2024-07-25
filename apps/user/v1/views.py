@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 import os
 from datetime import timezone
 from backend.utils.read_keys import read_private_key
-
+from django.template.loader import render_to_string
 
 class Register(CreateAPIView):
     serializer_class = RegisterSerializer
@@ -52,9 +52,14 @@ class PasswordResetView(APIView):
 
         reset_link = f"{frontend_url}/reset-password/?k={token}"
         
+        email_content = render_to_string('changePasswordEmail.html', {
+            'username': user.username,
+            'reset_link': reset_link
+        })
+
         emails.send_email_html(
             user.email,
             "Password Reset",
-            f"Hello {user.username},<br><br>Click <a href='{reset_link}'>here</a> to reset your password."
+            email_content
         )
         return Response({"message": "An email has been sent with instructions on how to reset your password."}, status=status.HTTP_200_OK)
