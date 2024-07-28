@@ -5,7 +5,7 @@ from rest_framework import status
 from .serializers import RegisterSerializer, LoginSerializer, PasswordResetSerializer
 from ..models import User
 from django.db.models import Q
-from django.http import Http404
+from django.shortcuts import get_object_or_404
 from backend.utils.email_sender import EmailSender
 import jwt
 from datetime import datetime, timedelta
@@ -34,9 +34,7 @@ class PasswordResetView(APIView):
         serializer.is_valid(raise_exception=True)
 
         username_or_email = serializer.validated_data['username_or_email']
-        user = User.objects.filter(Q(email=username_or_email) | Q(username=username_or_email)).first()
-        if not user:
-            raise Http404("No user with this username/email address has been found.")
+        user = get_object_or_404(User, Q(email=username_or_email) | Q(username=username_or_email))
 
         private_key = read_private_key()
 

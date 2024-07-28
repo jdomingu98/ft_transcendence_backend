@@ -5,10 +5,11 @@ from cryptography.hazmat.backends import default_backend
 
 def read_private_key():
     private_key_path = os.getenv('JWT_PRIVATE_KEY_PATH')
+    private_key_password = os.getenv('JWT_PRIVATE_KEY_PASSWORD').encode()
     with open(private_key_path, "rb") as key_file:
         private_key = serialization.load_pem_private_key(
             key_file.read(),
-            password=None,
+            password=private_key_password,
             backend=default_backend()
         )
     return private_key
