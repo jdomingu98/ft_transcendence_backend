@@ -39,3 +39,6 @@ class LoginSerializer(serializers.Serializer):
         if user is None:
             raise serializers.ValidationError("Invalid username/password.")
         return user
+
+class PasswordResetSerializer(serializers.Serializer):
+    username_or_email = serializers.CharField()
