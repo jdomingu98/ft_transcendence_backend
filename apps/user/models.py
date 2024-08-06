@@ -30,5 +30,5 @@ class User(AbstractBaseUser):
     objects = BaseUserManager()
 
 class RefreshToken(models.Model):
-    token = models.CharField(unique=True)
+    token = models.CharField(max_length=1024,unique=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
