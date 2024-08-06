@@ -1,0 +1,5 @@
+[flake8]
+exclude = migrations,settings.py
+max-line-length = 120
+ignore = E402,E501
+inline-quotes = "
