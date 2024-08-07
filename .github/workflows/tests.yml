@@ -48,7 +48,7 @@ jobs:
         SMTP_PORT: ${{ secrets.SMTP_PORT }}
         SMTP_EMAIL: ${{ secrets.SMTP_EMAIL }}
         SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-        JWT_PRIVATE_KEY_PATH: ${{ JWT_PRIVATE_KEY_PATH }} 
-        JWT_PUBLIC_KEY_PATH: ${{ JWT_PUBLIC_KEY_PATH }} 
-        JWT_PRIVATE_KEY_PASSWORD: ${{ JWT_PRIVATE_KEY_PASSWORD }} 
+        JWT_PRIVATE_KEY_PATH: ${{ secrets.JWT_PRIVATE_KEY_PATH }} 
+        JWT_PUBLIC_KEY_PATH: ${{ secrets.JWT_PUBLIC_KEY_PATH }} 
+        JWT_PRIVATE_KEY_PASSWORD: ${{ secrets.JWT_PRIVATE_KEY_PASSWORD }} 
 
