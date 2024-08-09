@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'apps.user',
+    'apps.game',
 ]
 
 MIDDLEWARE = [
@@ -112,6 +113,26 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = 'user.User'
 
+# Template configuration
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
@@ -135,3 +156,9 @@ MEDIA_ROOT = 'media/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Email settings
+SMTP_SERVER = env('SMTP_SERVER')
+SMTP_PORT = env('SMTP_PORT')
+SMTP_EMAIL = env('SMTP_EMAIL')
+SMTP_PASSWORD = env('SMTP_PASSWORD')

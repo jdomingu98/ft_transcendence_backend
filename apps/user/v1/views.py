@@ -3,9 +3,20 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import logout
-from .serializers import RegisterSerializer, LoginSerializer
+from .serializers import RegisterSerializer, LoginSerializer, PasswordResetSerializer, RefreshTokenSerializer
 from ..models import User
-
+from django.db.models import Q
+from django.shortcuts import get_object_or_404
+from backend.utils.email_sender import EmailSender
+import jwt
+from datetime import datetime, timedelta
+import os
+from datetime import timezone
+from backend.utils.read_keys import read_private_key
+from django.template.loader import render_to_string
+from backend.utils.read_keys import read_private_key, read_public_key
+from backend.utils.jwt_tokens import generate_new_tokens, generate_new_tokens_from_user, verify_token
+from ..models import RefreshToken
 
 class Register(CreateAPIView):
     serializer_class = RegisterSerializer
@@ -16,16 +27,7 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.validated_data
-            return Response({"message": "Successful login"}, status=status.HTTP_200_OK)
+            access_token, new_refresh_token = generate_new_tokens_from_user(user.id, user.email)
+            return Response({"access_token": access_token, "refresh_token": new_refresh_token}, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class LogoutView(APIView):
-    def post(self, request):
-        if request.user.is_authenticated:
-            request.user.is_connected = False
-            request.user.save()
-            logout(request)
-            return Response({"message": "Successfully logged out."}, status=status.HTTP_200_OK)
-        else:
-            return Response({"error": "Not logged in."}, status=status.HTTP_400_BAD_REQUEST)
