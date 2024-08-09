@@ -1,0 +1,70 @@
+files: ''
+default_language_version:
+  python: python3.12
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-ast
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-merge-conflict
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: name-tests-test
+        args: [ "--django" ]
+      - id: trailing-whitespace
+      - id: check-yaml
+      - id: check-added-large-files
+  - repo: https://github.com/pycqa/bandit
+    rev: 1.7.9
+    hooks:
+      - id: bandit
+        args: [ "-iii", "-ll" ]
+  - repo: https://github.com/psf/black
+    rev: 24.8.0
+    hooks:
+      - id: black
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+        additional_dependencies:
+          - flake8-bugbear
+          - flake8-builtins
+          - flake8-polyfill
+          - "flake8-comprehensions"
+          - "flake8-mutable"
+          - "flake8-print"
+          - "flake8-simplify"
+        exclude: settings.py | ^migrations/
+  - repo: https://github.com/pycqa/pylint
+    rev: "v3.2.6"
+    hooks:
+      - id: pylint
+        exclude: "[a-zA-Z]*/(migrations)/(.)*"
+        args: [ "--load-plugins=pylint_django", "--django-settings-module=backend.settings" ]
+        additional_dependencies: [
+            pylint_django,
+            Django==5.0.6,
+            django-environ==0.11.2,
+            psycopg2-binary==2.9.9,
+            djangorestframework==3.15.2,
+            PyJWT==2.8.0,
+            cryptography==42.0.8,
+        ]
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.1
+    hooks:
+      - id: mypy
+        exclude: "[a-zA-Z]*/(migrations)/(.)*"
+        additional_dependencies: [
+          django-stubs,
+          djangorestframework-stubs,
+          Django==5.0.6,
+          django-environ==0.11.2,
+          psycopg2-binary==2.9.9,
+          djangorestframework==3.15.2,
+          PyJWT==2.8.0,
+          cryptography==42.0.8,
+        ]
