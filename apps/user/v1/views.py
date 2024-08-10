@@ -72,7 +72,7 @@ class PasswordResetView(APIView):
             "Password Reset",
             email_content
         )
-        return Response({"message": "An email has been sent with instructions on how to reset your password."}, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)
     
 class RefreshTokenView(APIView):
     def post(self, request):       
