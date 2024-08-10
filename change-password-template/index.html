@@ -5,34 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="./styles.css">
-    <link href='https://fonts.googleapis.com/css?family=Aldrich' rel='stylesheet'>
+    <link href='https://fonts.googleapis.com/css?family=Outfit' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <div class="container">
-
-        <div class="modal-form hidden">
-            <h1 class="title-form">Change Password</h1>
-            <form id="change-password-form">
-
-                <div class="input-group">
-                    <input type="password" id="new-password" class="input" required>
-                    <label for="new-password" class="label">New Password</label>
-                </div>
-
-                <div class="input-group">
-                    <input type="password" id="confirm-password" class="input" required>
-                    <label for="confirm-password" class="label">Confirm Password</label>
-                </div>
-
-                <div class="show-password-checkbox">
-                    <input type="checkbox" id="show-password" onclick="togglePasswordVisibility()">
-                    <label for="show-password" >Show Password</label>
-                </div> 
-
-                <button type="submit" class="btn-form">Submit</button>
-            </form>
-        </div>
-
         <div class="card">
             <h1 class="title-card">We got a request to <br> reset your password</h1>
 
@@ -40,23 +17,16 @@
     
             <div class="change-password-section">
                 <span>Forgot your password? No problem - it happens to everyone!</span>
-                <button id="btn-password">Reset Your Password</button>
+                <button id="btn-password" onclick="window.location.href='update-password.html';">Reset Your Password</button>
                 <span>If you ignore this message, your password won't be changed.</span>
             </div>
 
             <div class="footer-section">
                 <h3 class="footer-title">Transcendence</h3>
-                <div class="footer-links">
-                    <a href="/legal-notice" rel="noreferrer">Legal Notice</a>
-                    <a href="/privacy" rel="noreferrer">Privacy Policy</a>
-                    <a href="/cookies" rel="noreferrer">Cookie Policy</a>
-                </div>
             </div>
 
         </div>
     </div>
-
-    <div class="overlay hidden"></div>
 
     <script src="./script.js"></script>
 </body>
