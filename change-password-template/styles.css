@@ -1,6 +1,6 @@
 body {
     margin: 0;
-    background-color: #262626;
+    background-color: #000235;
     font-family: 'Outfit';
     height: 100%;
 }
@@ -22,31 +22,40 @@ body {
     align-items: center;
     justify-content: center; 
     width: 38%;
-    min-height: 100vh; 
+    min-height: 100vh;
+    position: relative;
 }
 
 .title-card {
-    color: #ABD9D9;
-    font-size: 3rem;
+    color: #FFFFFF;
+    font-size: 2.5rem;
     min-width: 300px;
     font-weight: 200;
     letter-spacing: 3px;
     line-height: 3.7rem;
     text-align: center;
-    text-transform: uppercase;
     font-weight: 800;
-    margin-top: 3.1rem;
-    margin-bottom: 2.5rem;
+    text-transform: capitalize;
+    margin-bottom: rem;
+    margin-top: 3rem;
 }
 
 span{
     color: #FFFFFF;
+    text-align: start;
+    line-height: 30px;
+    font-size: 20px;
+}
+
+span:last-child{
+    opacity: 65%;
 }
 
 .img-card{
     width: 300px;
     max-width: 320px;
     height: auto;
+    margin-bottom: 2.5rem;
 }
 
 
@@ -55,40 +64,32 @@ span{
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 2.5rem;
+    gap: 2.2rem;
     text-align: center;
-    flex-grow: 1;
-    margin-bottom: 2rem;
+    width: 100%;
 }
 
 
 #btn-password {
-    padding: 1.3rem 4rem;
-    background-color: #8D8DDA;
+    padding: 20px 60px;
+    background-color: #ABD9D9;
     border-radius: 50px;
-    border: none;
-    color: #fff;
+    border: 2px solid #000000;
+    color: #000000;
     font-size: 1.3rem;
+    font-weight: 600;
     cursor: pointer;
+    text-transform: uppercase;
+    margin-top: 0.7rem;
+    margin-bottom: 0.7rem;
 }
 
 
 .footer-section{
-    padding: 1rem 0;
+    padding: 5px 0;
     width: 100%;
     background: linear-gradient(315deg, #ABD9D9 0%, #5151C6 100%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    text-align: center;
-}
-
-.footer-title {
-    color: #FFFFFF;
-    font-size: 1rem;
-    text-transform: uppercase;
+    margin-top: auto;
 }
 
 
@@ -109,25 +110,14 @@ span{
         margin-bottom: 2rem;
     }
 
-    .btn-password {
+    span{
+        text-align: center;
+    }
+
+    #btn-password {
         font-size: 1.2rem;
-    }
-
-    .footer-section{
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .footer-title {
-        font-size: 1rem;
-    }
-
-    .footer-link {
-        font-size: 0.8rem;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 1rem;
+        padding: 10px 30px;
     }
 }
+
+
