@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
 
-from backend.utils.jwt_tokens import generate_new_tokens_from_user
+from backend.utils.jwt_tokens import generate_new_tokens_from_user, generate_new_tokens
 from ..models import User
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -29,18 +29,13 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('repeat_password', None)
         validated_data['password'] = make_password(validated_data['password'])
-        user = User.objects.create(**validated_data)
-
-        access_token, refresh_token = generate_new_tokens_from_user(user.id, user.email)
-        self.context['access_token'] = access_token
-        self.context['refresh_token'] = refresh_token
-
-        return user
+        return User.objects.create(**validated_data)
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation['access_token'] = self.context.get('access_token')
-        representation['refresh_token'] = self.context.get('refresh_token')
+        access_token, refresh_token = generate_new_tokens_from_user(instance.id, instance.email)
+        representation['access_token'] = access_token
+        representation['refresh_token'] = refresh_token
         return representation
 
     def validate(self, data):
@@ -49,8 +44,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         return data
     
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField()
+    username = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True)
+    access_token = serializers.CharField(read_only=True)
+    refresh_token = serializers.CharField(read_only=True)
 
     def validate(self, data):
         user = authenticate(username=data['username'], password=data['password'])
@@ -58,8 +55,17 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid username/password.")
         return user
 
+    def to_representation(self, instance):
+        access_token, refresh_token = generate_new_tokens_from_user(instance.id,instance.email)
+        return {
+            'access_token': access_token,
+            'refresh_token': refresh_token,
+        }
+
 class PasswordResetSerializer(serializers.Serializer):
     username_or_email = serializers.CharField()
 
 class RefreshTokenSerializer(serializers.Serializer):
-    token = serializers.CharField()
+    token = serializers.CharField(write_only=True)
+    access_token = serializers.CharField(read_only=True)
+    refresh_token = serializers.CharField(read_only=True)
