@@ -2,7 +2,7 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import RegisterSerializer, LoginSerializer, PasswordResetSerializer
+from .serializers import RegisterSerializer, LoginSerializer, PasswordResetSerializer, RefreshTokenSerializer
 from ..models import User
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -13,6 +13,9 @@ import os
 from datetime import timezone
 from backend.utils.read_keys import read_private_key
 from django.template.loader import render_to_string
+from backend.utils.read_keys import read_private_key
+from backend.utils.jwt_tokens import generate_new_tokens, verify_token
+from rest_framework import mixins
 
 class Register(CreateAPIView):
     serializer_class = RegisterSerializer
@@ -22,10 +25,17 @@ class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.validated_data
-            return Response({"message": "Successful login"}, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+class MeView(APIView):
+    def post(self, request):
+        return Response(
+            verify_token(request.data["token"]),
+            status=status.HTTP_200_OK
+        )
+
         
 class PasswordResetView(APIView):
     def post(self, request):
@@ -60,4 +70,10 @@ class PasswordResetView(APIView):
             "Password Reset",
             email_content
         )
-        return Response({"message": "An email has been sent with instructions on how to reset your password."}, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+class RefreshTokenView(APIView):
+    def post(self, request):       
+        serializer = RefreshTokenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
