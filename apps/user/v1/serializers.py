@@ -3,7 +3,7 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
 
 from backend.utils.jwt_tokens import generate_new_tokens_from_user, generate_new_tokens
-from ..models import User
+from ..models import User, RefreshToken
 
 class RegisterSerializer(serializers.ModelSerializer):
     repeat_password = serializers.CharField(max_length=255, write_only=True)
@@ -76,3 +76,15 @@ class RefreshTokenSerializer(serializers.Serializer):
             'access_token': access_token,
             'refresh_token': refresh_token,
         }
+
+class logoutSerializer(serializers.Serializer):
+    token = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        token = data['token']
+        try:
+            refresh_token = RefreshToken.objects.get(token=token)
+            data['user'] = refresh_token.user
+        except RefreshToken.DoesNotExist:
+            raise serializers.ValidationError("Invalid token")
+        return data
