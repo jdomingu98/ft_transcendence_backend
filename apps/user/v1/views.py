@@ -76,7 +76,4 @@ class RefreshTokenView(APIView):
     def post(self, request):       
         serializer = RefreshTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        refresh_token = request.data.get('token')
-
-        access_token, new_refresh_token = generate_new_tokens(refresh_token)
-        return Response({"access_token": access_token, "refresh_token": new_refresh_token}, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)

@@ -69,3 +69,10 @@ class RefreshTokenSerializer(serializers.Serializer):
     token = serializers.CharField(write_only=True)
     access_token = serializers.CharField(read_only=True)
     refresh_token = serializers.CharField(read_only=True)
+
+    def to_representation(self, instance):
+        access_token, refresh_token = generate_new_tokens(instance['token'])
+        return {
+            'access_token': access_token,
+            'refresh_token': refresh_token,
+        }
