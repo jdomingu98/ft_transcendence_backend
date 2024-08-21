@@ -22,7 +22,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Generate SSH key
       run: |
-        ssh-keygen -t rsa -b 2048 -m PEM -f "JWT_PRIVATE_KEY_PATH" -N "$SUPER_SECRET" -q
+        ssh-keygen -t rsa -b 2048 -m PEM -f "$JWT_PRIVATE_KEY_PATH" -N "$SUPER_SECRET" -q
       env:
         SUPER_SECRET: ${{ secrets.JWT_PRIVATE_KEY_PASSWORD }}
         JWT_PRIVATE_KEY_PATH: ${{ secrets.JWT_PRIVATE_KEY_PATH }}
