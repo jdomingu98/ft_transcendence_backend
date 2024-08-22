@@ -2,8 +2,8 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import RegisterSerializer, LoginSerializer, PasswordResetSerializer, RefreshTokenSerializer
-from ..models import User
+from .serializers import RegisterSerializer, LoginSerializer, PasswordResetSerializer, RefreshTokenSerializer, logoutSerializer
+from ..models import User, RefreshToken
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from backend.utils.email_sender import EmailSender
@@ -77,3 +77,16 @@ class RefreshTokenView(APIView):
         serializer = RefreshTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class LogoutView(APIView):
+    def post(self, request):
+        serializer = logoutSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data['user']
+            user.is_connected = False
+            user.save()
+            refresh_token = RefreshToken.objects.get(token=serializer.validated_data['token'])
+            refresh_token.delete()
+            return Response(status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
