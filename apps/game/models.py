@@ -1,10 +1,11 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
 
 # Create your models here.
 
+
 class Statistics(models.Model):
-    user = models.OneToOneField('user.User', on_delete=models.CASCADE)
+    user = models.OneToOneField("user.User", on_delete=models.CASCADE)
 
     max_streak = models.IntegerField(default=0)
 
@@ -13,7 +14,7 @@ class Statistics(models.Model):
     tournament_win_rate = models.IntegerField(default=100, validators=[MinValueValidator(0), MaxValueValidator(100)])
 
     time_played = models.TimeField()
-    
+
     punctuation = models.IntegerField(default=0)
 
     total_match = models.IntegerField(default=0)

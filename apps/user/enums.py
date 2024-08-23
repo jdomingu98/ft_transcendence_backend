@@ -1,4 +1,5 @@
 from enum import Enum
+
 from django.db import models
 
 
@@ -9,6 +10,6 @@ class Visibility(Enum):
 
 
 class Language(models.TextChoices):
-    SPANISH = 'es', 'Spanish'
-    ENGLISH = 'en', 'English'
-    FRENCH = 'fr', 'French'
+    SPANISH = "es", "Spanish"
+    ENGLISH = "en", "English"
+    FRENCH = "fr", "French"
