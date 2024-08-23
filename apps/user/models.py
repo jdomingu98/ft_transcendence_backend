@@ -1,7 +1,7 @@
-from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.db import models
 
-from .enums import Visibility, Language
+from .enums import Language, Visibility
 
 
 class User(AbstractBaseUser):
@@ -15,18 +15,17 @@ class User(AbstractBaseUser):
 
     visibility = models.IntegerField(
         choices=[(tag.value, tag.name) for tag in Visibility],
-        default=Visibility.PUBLIC.value
+        default=Visibility.PUBLIC.value,
     )
 
     is_connected = models.BooleanField(default=True)
 
-    language = models.CharField(
-        choices=Language.choices,
-        default=Language.SPANISH.value,
-        max_length=2
-    )
+    language = models.CharField(choices=Language.choices, default=Language.SPANISH.value, max_length=2)
 
-    USERNAME_FIELD = 'username'
+    USERNAME_FIELD = "username"
     objects = BaseUserManager()
 
 
+class RefreshToken(models.Model):
+    token = models.CharField(max_length=1024, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)

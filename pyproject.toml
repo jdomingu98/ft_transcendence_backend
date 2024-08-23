@@ -1,0 +1,32 @@
+[tool.black]
+line-length = 120
+include = '\.pyi?$'
+
+[tool.pylint.MESSAGE_CONTROL]
+disable = """
+    abstract-method,
+    arguments-renamed,
+    missing-class-docstring,
+    missing-function-docstring,
+    missing-module-docstring,
+    no-member,
+    relative-beyond-top-level,
+    too-few-public-methods,
+    too-many-ancestors,
+"""
+enable = "useless-suppression"
+
+[tool.pylint.REPORTS]
+reports="no"
+
+[tool.pylint.FORMAT]
+max-line-length="120"
+
+[tool.pylint.BASIC]
+good-names = "_,i,e,setUp,tearDown,maxDiff"
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "backend.settings"

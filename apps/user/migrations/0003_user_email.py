@@ -6,14 +6,14 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('user', '0002_rename_status_user_is_connected_alter_user_banner_and_more'),
+        ("user", "0002_rename_status_user_is_connected_alter_user_banner_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='email',
-            field=models.EmailField(default='', max_length=255, unique=True),
+            model_name="user",
+            name="email",
+            field=models.EmailField(default="", max_length=255, unique=True),
             preserve_default=False,
         ),
     ]

@@ -15,20 +15,35 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Statistics',
+            name="Statistics",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('max_streak', models.IntegerField()),
-                ('invididual_win_rate', models.IntegerField()),
-                ('tournament_win_rate', models.IntegerField()),
-                ('time_played', models.TimeField()),
-                ('punctuation', models.IntegerField()),
-                ('total_match', models.IntegerField()),
-                ('total_turney', models.IntegerField()),
-                ('total_goals', models.IntegerField()),
-                ('total_goals_against', models.IntegerField()),
-                ('total_goals_stopped', models.IntegerField()),
-                ('user_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, unique=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("max_streak", models.IntegerField()),
+                ("invididual_win_rate", models.IntegerField()),
+                ("tournament_win_rate", models.IntegerField()),
+                ("time_played", models.TimeField()),
+                ("punctuation", models.IntegerField()),
+                ("total_match", models.IntegerField()),
+                ("total_turney", models.IntegerField()),
+                ("total_goals", models.IntegerField()),
+                ("total_goals_against", models.IntegerField()),
+                ("total_goals_stopped", models.IntegerField()),
+                (
+                    "user_id",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                        unique=True,
+                    ),
+                ),
             ],
         ),
     ]

@@ -7,25 +7,55 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='User',
+            name="User",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('password', models.CharField(max_length=128, verbose_name='password')),
-                ('last_login', models.DateTimeField(blank=True, null=True, verbose_name='last login')),
-                ('username', models.CharField(max_length=50, unique=True)),
-                ('profile_img', models.CharField(max_length=200, null=True, unique=True)),
-                ('banner', models.CharField(max_length=200, null=True, unique=True)),
-                ('visibility', models.IntegerField(choices=[(1, 'PUBLIC'), (2, 'PRIVATE'), (3, 'ANONYMOUS')], default=1)),
-                ('status', models.BooleanField(default=True)),
-                ('language', models.CharField(choices=[('es', 'Spanish'), ('en', 'English'), ('fr', 'French')], default='es', max_length=2)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("password", models.CharField(max_length=128, verbose_name="password")),
+                (
+                    "last_login",
+                    models.DateTimeField(blank=True, null=True, verbose_name="last login"),
+                ),
+                ("username", models.CharField(max_length=50, unique=True)),
+                (
+                    "profile_img",
+                    models.CharField(max_length=200, null=True, unique=True),
+                ),
+                ("banner", models.CharField(max_length=200, null=True, unique=True)),
+                (
+                    "visibility",
+                    models.IntegerField(
+                        choices=[(1, "PUBLIC"), (2, "PRIVATE"), (3, "ANONYMOUS")],
+                        default=1,
+                    ),
+                ),
+                ("status", models.BooleanField(default=True)),
+                (
+                    "language",
+                    models.CharField(
+                        choices=[
+                            ("es", "Spanish"),
+                            ("en", "English"),
+                            ("fr", "French"),
+                        ],
+                        default="es",
+                        max_length=2,
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
     ]
