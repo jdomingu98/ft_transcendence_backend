@@ -21,6 +21,7 @@ from .serializers import (
     PasswordResetSerializer,
     RefreshTokenSerializer,
     RegisterSerializer,
+    ChangePasswordSerializer,
 )
 
 
@@ -55,6 +56,7 @@ class PasswordResetView(APIView):
 
         payload = {
             "user_id": user.id,
+            "change_password":True,
             "exp": datetime.now(timezone.utc) + timedelta(hours=1),
             "iat": datetime.now(timezone.utc),
         }
@@ -98,13 +100,13 @@ class LogoutView(APIView):
             return Response(status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class ChangePasswordView(APIView):
 
-    #permission_classes = [IsAuthenticated]
-    def patch(self, request):
-        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
-        if serializer.is_valid():
-            user = serializer.validated_data
-            return Response({"message": "Password change suscessfully."}, status=status.HTTP_200_OK)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ChangePasswordView(APIView):
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, instance=user)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.validated_data
+        user.set_password(request.data.get("new_password"))
+        return Response(status=status.HTTP_204_NO_CONTENT)

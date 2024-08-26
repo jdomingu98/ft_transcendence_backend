@@ -1,8 +1,10 @@
 from django.contrib.auth import authenticate
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password, check_password
 from rest_framework import serializers
+from django.db.models import Q
 
-from backend.utils.jwt_tokens import generate_new_tokens, generate_new_tokens_from_user
+
+from backend.utils.jwt_tokens import generate_new_tokens, generate_new_tokens_from_user, verify_token
 
 from ..models import RefreshToken, User
 
@@ -98,23 +100,18 @@ class LogoutSerializer(serializers.Serializer):
     
     
 class ChangePasswordSerializer(serializers.Serializer):
-    username = serializers.CharField(required=True)
-    old_password = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(write_only=True)
+    repeat_new_password = serializers.CharField(write_only=True)
+    change_password_token = serializers.CharField(write_only=True)
 
-    def validate(self, data):
-        user = authenticate(username=data['username'], password=data['old_password'])
-        if user is None:
-            raise serializers.ValidationError("Invalid username/password.")
-        return data
+    def validate(self, data):        
+        payload = verify_token(data['change_password_token'])
+        if not (payload.get("change_password")):
+            raise serializers.ValidationError("Is not change_password_token")
 
-    def validate_old_password(self, value):
-        user = self.context['request'].user
-        if not user.check_password(value):
-            raise serializers.ValidationError("Incorrect Password.")
-        return value
+        new_password = data["new_password"]
+        repeat_new_password = data["repeat_new_password"]
+        if new_password != repeat_new_password:
+            raise serializers.ValidationError("The password doesn´t match")
 
-    def update(self, instance, validated_data):
-        instance.set_password(validated_data['new_password'])
-        instance.save()
-        return instance
+        return User.objects.get(id=payload.get("user_id"))
