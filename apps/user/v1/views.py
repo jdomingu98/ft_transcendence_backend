@@ -107,6 +107,6 @@ class ChangePasswordView(APIView):
         serializer = ChangePasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user = serializer.validated_data
+        user: User = serializer.validated_data
         user.set_password(request.data.get("new_password"))
         return Response(status=status.HTTP_204_NO_CONTENT)
