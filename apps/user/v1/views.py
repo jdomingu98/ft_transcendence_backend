@@ -104,7 +104,7 @@ class LogoutView(APIView):
 
 class ChangePasswordView(APIView):
     def post(self, request):
-        serializer = ChangePasswordSerializer(data=request.data, instance=user)
+        serializer = ChangePasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user = serializer.validated_data
