@@ -23,7 +23,7 @@ class User(AbstractBaseUser):
         unique=True,
         validators=[
             RegexValidator(
-                regex=r'^[\w\.-]+@[\w\.-]+\.\w{2,}$',
+                regex=r'^[\w.-]+@([\w-]+.)+[\w-]{2,4}$',
                 message='Email must be valid',
                 code='invalid_email'
             ),
