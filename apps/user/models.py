@@ -11,11 +11,11 @@ class User(AbstractBaseUser):
         unique=True,
         validators=[
             RegexValidator(
-                regex=r'^[a-zA-Z0-9-]*$',
-                message='Username must be alphanumeric or contain hyphens',
-                code='invalid_username'
+                regex=r"^[a-zA-Z0-9-]*$",
+                message="Username must be alphanumeric or contain hyphens",
+                code="invalid_username",
             ),
-        ]
+        ],
     )
 
     email = models.EmailField(
@@ -23,11 +23,9 @@ class User(AbstractBaseUser):
         unique=True,
         validators=[
             RegexValidator(
-                regex=r'^[\w.-]+@([\w-]+\.)+[a-zA-Z]{2,3}$',
-                message='Email must be valid',
-                code='invalid_email'
+                regex=r"^[\w.-]+@([\w-]+\.)+[a-zA-Z]{2,3}$", message="Email must be valid", code="invalid_email"
             ),
-        ]
+        ],
     )
 
     profile_img = models.FileField(max_length=200, null=True)
