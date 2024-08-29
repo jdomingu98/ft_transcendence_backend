@@ -64,11 +64,10 @@ class PasswordResetView(APIView):
         frontend_url = os.getenv("FRONTEND_URL")
 
         reset_link = f"{frontend_url}/reset-password/?k={token}"
-        
-        email_content = render_to_string('changePassword/index.html', {
-            'username': user.username,
-            'reset_link': reset_link
-        })
+
+        email_content = render_to_string(
+            "changePassword/index.html", {"username": user.username, "reset_link": reset_link}
+        )
 
         email_content = render_to_string(
             "changePasswordEmail.html",
