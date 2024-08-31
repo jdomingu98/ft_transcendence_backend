@@ -43,8 +43,8 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate_password(self, value):
         user = User(
             {
-                "username": self.initial_data["username"],
-                "email": self.initial_data["email"],
+                "username": self.initial_data.get("username"),
+                "email": self.initial_data.get("email"),
             }
         )
         password_validation.validate_password(value, user)
