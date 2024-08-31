@@ -1,6 +1,7 @@
 import os
 from datetime import datetime, timedelta, timezone
 
+import pynliner
 import jwt
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -68,9 +69,13 @@ class PasswordResetView(APIView):
         reset_link = f"{frontend_url}/reset-password/?k={token}"
 
         email_content = render_to_string(
-            "changePassword/index.html", {"username": user.username, "reset_link": reset_link}
+            "changePassword.html", {"username": user.username, "reset_link": reset_link}
         )
-        emails.send_email_html(user.email, "Password Reset", email_content)
+
+        inliner = pynliner.Pynliner()
+        email_content_inline = inliner.from_string(email_content).run()
+
+        emails.send_email_html(user.email, "Recover Password Request", email_content_inline)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
