@@ -56,7 +56,7 @@ class PasswordResetView(APIView):
 
         payload = {
             "user_id": user.id,
-            "change_password":True,
+            "change_password": True,
             "exp": datetime.now(timezone.utc) + timedelta(hours=1),
             "iat": datetime.now(timezone.utc),
         }
@@ -66,11 +66,10 @@ class PasswordResetView(APIView):
         frontend_url = os.getenv("FRONTEND_URL")
 
         reset_link = f"{frontend_url}/reset-password/?k={token}"
-        
-        email_content = render_to_string('changePassword/index.html', {
-            'username': user.username,
-            'reset_link': reset_link
-        })
+
+        email_content = render_to_string(
+            "changePassword/index.html", {"username": user.username, "reset_link": reset_link}
+        )
         emails.send_email_html(user.email, "Password Reset", email_content)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -93,7 +92,6 @@ class LogoutView(APIView):
             refresh_token.delete()
             return Response(status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class ChangePasswordView(APIView):

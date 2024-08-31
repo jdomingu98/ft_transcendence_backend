@@ -1,8 +1,6 @@
 from django.contrib.auth import authenticate
-from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
-from django.db.models import Q
-
 
 from backend.utils.jwt_tokens import generate_new_tokens, generate_new_tokens_from_user, verify_token
 
@@ -97,18 +95,16 @@ class LogoutSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid token") from e
         return data
 
-    
-    
+
 class ChangePasswordSerializer(serializers.Serializer):
     new_password = serializers.CharField(write_only=True)
     repeat_new_password = serializers.CharField(write_only=True)
     change_password_token = serializers.CharField(write_only=True)
 
-    def validate(self, data):        
-        payload = verify_token(data['change_password_token'])
-        if not (payload.get("change_password")):
+    def validate(self, data):
+        payload = verify_token(data["change_password_token"])
+        if not payload.get("change_password"):
             raise serializers.ValidationError("Is not change_password_token")
-
         new_password = data["new_password"]
         repeat_new_password = data["repeat_new_password"]
         if new_password != repeat_new_password:
