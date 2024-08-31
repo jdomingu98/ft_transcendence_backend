@@ -78,7 +78,7 @@ p {
 /* Media query for responsive page */
 
 @media (width <= 988px) {
-    
+
     .card {
         width: 70%;
     }

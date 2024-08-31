@@ -71,6 +71,7 @@ class PasswordResetView(APIView):
             'username': user.username,
             'reset_link': reset_link
         })
+
         emails.send_email_html(user.email, "Password Reset", email_content)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
