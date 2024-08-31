@@ -44,7 +44,7 @@ repos:
         args: [ "--load-plugins=pylint_django", "--django-settings-module=backend.settings" ]
         additional_dependencies: [
             pylint_django,
-            Django==5.0.6,
+            Django==5.0.8,
             django-environ==0.11.2,
             psycopg2-binary==2.9.9,
             djangorestframework==3.15.2,
