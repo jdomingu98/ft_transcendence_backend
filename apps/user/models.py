@@ -1,13 +1,32 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
+from django.core.validators import RegexValidator
 
 from .enums import Language, Visibility
 
 
 class User(AbstractBaseUser):
-    username = models.CharField(max_length=50, unique=True)
+    username = models.CharField(
+        max_length=50,
+        unique=True,
+        validators=[
+            RegexValidator(
+                regex=r"^[a-zA-Z0-9-]*$",
+                message="Username must be alphanumeric or contain hyphens",
+                code="invalid_username",
+            ),
+        ],
+    )
 
-    email = models.EmailField(max_length=255, unique=True)
+    email = models.EmailField(
+        max_length=255,
+        unique=True,
+        validators=[
+            RegexValidator(
+                regex=r"^[\w.-]+@([\w-]+\.)+[a-zA-Z]{2,3}$", message="Email must be valid", code="invalid_email"
+            ),
+        ],
+    )
 
     profile_img = models.FileField(max_length=200, null=True)
 
