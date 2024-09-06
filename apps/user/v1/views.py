@@ -1,6 +1,7 @@
 import os
 from datetime import datetime, timedelta, timezone
 
+import pynliner
 import jwt
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -21,6 +22,7 @@ from .serializers import (
     PasswordResetSerializer,
     RefreshTokenSerializer,
     RegisterSerializer,
+    ChangePasswordSerializer,
 )
 
 
@@ -55,6 +57,7 @@ class PasswordResetView(APIView):
 
         payload = {
             "user_id": user.id,
+            "change_password": True,
             "exp": datetime.now(timezone.utc) + timedelta(hours=1),
             "iat": datetime.now(timezone.utc),
         }
@@ -64,18 +67,15 @@ class PasswordResetView(APIView):
         frontend_url = os.getenv("FRONTEND_URL")
 
         reset_link = f"{frontend_url}/reset-password/?k={token}"
-        
-        email_content = render_to_string('changePassword/index.html', {
-            'username': user.username,
-            'reset_link': reset_link
-        })
 
         email_content = render_to_string(
-            "changePasswordEmail.html",
-            {"username": user.username, "reset_link": reset_link},
+            "changePassword.html", {"username": user.username, "reset_link": reset_link}
         )
 
-        emails.send_email_html(user.email, "Password Reset", email_content)
+        inliner = pynliner.Pynliner()
+        email_content_inline = inliner.from_string(email_content).run()
+
+        emails.send_email_html(user.email, "Recover Password Request", email_content_inline)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -97,3 +97,14 @@ class LogoutView(APIView):
             refresh_token.delete()
             return Response(status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ChangePasswordView(APIView):
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user: User = serializer.validated_data
+        user.set_password(request.data.get("new_password"))
+        user.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
