@@ -42,7 +42,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate_password(self, value):
         user = User(
-            {
+            **{
                 "username": self.initial_data.get("username"),
                 "email": self.initial_data.get("email"),
             }
