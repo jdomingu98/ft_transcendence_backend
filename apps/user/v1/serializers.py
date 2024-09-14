@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, password_validation
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 
@@ -39,6 +39,16 @@ class RegisterSerializer(serializers.ModelSerializer):
         representation["access_token"] = access_token
         representation["refresh_token"] = refresh_token
         return representation
+
+    def validate_password(self, value):
+        user = User(
+            **{
+                "username": self.initial_data.get("username"),
+                "email": self.initial_data.get("email"),
+            }
+        )
+        password_validation.validate_password(value, user)
+        return value
 
     def validate(self, data):
         if data["password"] != data["repeat_password"]:

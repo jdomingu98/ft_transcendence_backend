@@ -37,23 +37,23 @@ class RegisterViewTest(APITestCase):
         self.assertIn("repeat_password", self.response.data)
 
     def test_register_user_invalid_email(self):
-        data = generate_user_mock("testuser", "invalid-email", "testpassword", "testpassword")
+        data = generate_user_mock("testuser", "invalid-email", "my'secure'password", "my'secure'password")
         self.when_user_is_registered(data)
         self.should_return_400()
         self.should_contain_field_error("email", "Enter a valid email address.")
 
     def test_unique_username(self):
-        data = generate_user_mock("testuser", "email1@test.com", "testpassword", "testpassword")
+        data = generate_user_mock("testuser", "email1@test.com", "my'secure'password", "my'secure'password")
         self.when_user_is_registered(data)
-        data2 = generate_user_mock("testuser", "email2@test.com", "testpassword", "testpassword")
+        data2 = generate_user_mock("testuser", "email2@test.com", "my'secure'password", "my'secure'password")
         self.when_user_is_registered(data2)
         self.should_return_400()
         self.should_contain_field_error("username", "user with this username already exists.")
 
     def test_unique_email(self):
-        data = generate_user_mock("testuser", "sameemail@test.com", "testpassword", "testpassword")
+        data = generate_user_mock("testuser", "sameemail@test.com", "my'secure'password", "my'secure'password")
         self.when_user_is_registered(data)
-        data2 = generate_user_mock("testuser2", "sameemail@test.com", "testpassword", "testpassword")
+        data2 = generate_user_mock("testuser2", "sameemail@test.com", "my'secure'password", "my'secure'password")
         self.when_user_is_registered(data2)
         self.should_return_400()
         self.should_contain_field_error("email", "user with this email already exists.")
