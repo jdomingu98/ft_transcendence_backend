@@ -13,21 +13,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterField(
             model_name="user",
-            name="email",
-            field=models.EmailField(
-                max_length=255,
-                unique=True,
-                validators=[
-                    django.core.validators.RegexValidator(
-                        code="invalid_email",
-                        message="Email must be valid",
-                        regex="^[\\w.-]+@([\\w-]+\\.)+[a-zA-Z]{2,3}$",
-                    )
-                ],
-            ),
-        ),
-        migrations.AlterField(
-            model_name="user",
             name="username",
             field=models.CharField(
                 max_length=50,
