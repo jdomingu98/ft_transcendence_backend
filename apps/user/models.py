@@ -41,6 +41,8 @@ class User(AbstractBaseUser):
 
     language = models.CharField(choices=Language.choices, default=Language.SPANISH.value, max_length=2)
 
+    id42 = models.TextField(null=True)
+
     USERNAME_FIELD = "username"
     objects = BaseUserManager()
 
