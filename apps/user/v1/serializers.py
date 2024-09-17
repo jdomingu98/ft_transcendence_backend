@@ -111,3 +111,7 @@ class ChangePasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError("The password doesn´t match")
 
         return User.objects.get(id=payload.get("user_id"))
+
+
+class OAuthCodeSerializer(serializers.Serializer):
+    code = serializers.CharField(required=True)
