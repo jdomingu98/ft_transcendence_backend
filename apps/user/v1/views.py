@@ -127,8 +127,8 @@ class OAuthView(APIView):
 
         user = get_or_create_user(user_info)
         login_serializer = LoginSerializer(user)
-        tokens = login_serializer.to_representation(user)
+
         return Response(
-            {"access_token": tokens["access_token"], "refresh_token": tokens["refresh_token"]},
+            login_serializer.data,
             status=status.HTTP_200_OK,
         )
