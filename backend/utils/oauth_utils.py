@@ -35,15 +35,12 @@ def get_user_info(access_token):
 
 def get_or_create_user(user_info):
     id_42 = user_info["id"]
-    try:
-        user = User.objects.get(id42=id_42)
-    except User.DoesNotExist:
-        username = user_info["login"]
-        email = user_info["email"]
-        if User.objects.filter(username=username).exists():
-            username = f"{username}_42"
-        try:
-            user = User.objects.create(id42=id_42, username=username, email=email)
-        except IntegrityError as exc:
-            raise serializers.ValidationError("Integrity error occurred") from exc
+    username = user_info["login"]
+    email = user_info["email"]
+
+    if User.objects.filter(username=username).exists():
+        username = f"{username}_42"
+
+    user, _ = User.objects.get_or_create(id42=id_42, defaults={"username": username, "email": email})
+
     return user
