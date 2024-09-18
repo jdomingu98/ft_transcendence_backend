@@ -14,6 +14,7 @@ from rest_framework.views import APIView
 from backend.utils.email_sender import EmailSender
 from backend.utils.jwt_tokens import verify_token
 from backend.utils.read_keys import read_private_key
+from backend.utils.oauth_utils import get_access_token, get_user_info, get_or_create_user
 
 from ..models import RefreshToken, User
 from .serializers import (
@@ -23,6 +24,7 @@ from .serializers import (
     RefreshTokenSerializer,
     RegisterSerializer,
     ChangePasswordSerializer,
+    OAuthCodeSerializer,
 )
 
 
@@ -68,9 +70,7 @@ class PasswordResetView(APIView):
 
         reset_link = f"{frontend_url}/reset-password/?k={token}"
 
-        email_content = render_to_string(
-            "changePassword.html", {"username": user.username, "reset_link": reset_link}
-        )
+        email_content = render_to_string("changePassword.html", {"username": user.username, "reset_link": reset_link})
 
         inliner = pynliner.Pynliner()
         email_content_inline = inliner.from_string(email_content).run()
@@ -108,3 +108,27 @@ class ChangePasswordView(APIView):
         user.set_password(request.data.get("new_password"))
         user.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class OAuthView(APIView):
+    def post(self, request):
+        serializer = OAuthCodeSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        code = serializer.validated_data["code"]
+        access_token = get_access_token(code)
+        if not access_token:
+            return Response({"error": "ERROR.OAUTH.TOKEN"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user_info = get_user_info(access_token)
+        if not user_info:
+            return Response({"error": "ERROR.OAUTH.USER_INFO"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = get_or_create_user(user_info)
+        login_serializer = LoginSerializer(user)
+
+        return Response(
+            login_serializer.data,
+            status=status.HTTP_200_OK,
+        )

@@ -68,6 +68,7 @@ class UserModelEmailTest(TestCase):
                     password="testpassword123",
                     profile_img="default.jpg",
                     banner="default_banner.jpg",
+                    id42="lacasualidad",
                 )
                 try:
                     user.full_clean()  # This will call the validators
@@ -83,6 +84,7 @@ class UserModelEmailTest(TestCase):
                     password="testpassword123",
                     profile_img="default.jpg",
                     banner="default_banner.jpg",
+                    id42="lacasualidad",
                 )
                 with self.assertRaises(ValidationError):
                     user.full_clean()  # This should raise ValidationError
