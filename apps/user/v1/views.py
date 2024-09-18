@@ -119,11 +119,11 @@ class OAuthView(APIView):
         code = serializer.validated_data["code"]
         access_token = get_access_token(code)
         if not access_token:
-            return Response({"error": "Failed to retrieve access token"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "ERROR.OAUTH.TOKEN"}, status=status.HTTP_400_BAD_REQUEST)
 
         user_info = get_user_info(access_token)
         if not user_info:
-            return Response({"error": "Failed to retrieve user info"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "ERROR.OAUTH.USER_INFO"}, status=status.HTTP_400_BAD_REQUEST)
 
         user = get_or_create_user(user_info)
         login_serializer = LoginSerializer(user)
