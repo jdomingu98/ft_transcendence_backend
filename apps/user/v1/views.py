@@ -113,19 +113,22 @@ class ChangePasswordView(APIView):
 class OAuthView(APIView):
     def post(self, request):
         serializer = OAuthCodeSerializer(data=request.data)
-        if serializer.is_valid():
-            code = serializer.validated_data["code"]
-            access_token = get_access_token(code)
-            if access_token:
-                user_info = get_user_info(access_token)
-                if user_info:
-                    user = get_or_create_user(user_info)
-                    login_serializer = LoginSerializer(user)
-                    tokens = login_serializer.to_representation(user)
-                    return Response(
-                        {"access_token": tokens["access_token"], "refresh_token": tokens["refresh_token"]},
-                        status=status.HTTP_200_OK,
-                    )
-                return Response({"error": "Failed to retrieve user info"}, status=status.HTTP_400_BAD_REQUEST)
-            return Response({"error": "No access token found"}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        code = serializer.validated_data["code"]
+        access_token = get_access_token(code)
+        if not access_token:
+            return Response({"error": "Failed to retrieve access token"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user_info = get_user_info(access_token)
+        if not user_info:
+            return Response({"error": "Failed to retrieve user info"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = get_or_create_user(user_info)
+        login_serializer = LoginSerializer(user)
+        tokens = login_serializer.to_representation(user)
+        return Response(
+            {"access_token": tokens["access_token"], "refresh_token": tokens["refresh_token"]},
+            status=status.HTTP_200_OK,
+        )
