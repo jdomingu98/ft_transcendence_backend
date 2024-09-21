@@ -51,3 +51,7 @@ jobs:
         JWT_PRIVATE_KEY_PATH: ${{ secrets.JWT_PRIVATE_KEY_PATH }}
         JWT_PUBLIC_KEY_PATH: ${{ secrets.JWT_PUBLIC_KEY_PATH }}
         JWT_PRIVATE_KEY_PASSWORD: ${{ secrets.JWT_PRIVATE_KEY_PASSWORD }}
+        FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+        OAUTH_UID: ${{ secrets.OAUTH_UID }}
+        OAUTH_SECRET: ${{ secrets.OAUTH_SECRET }}
+        OAUTH_REDIRECT_URI: ${{ secrets.OATUH_REDIRECT_URI }}
