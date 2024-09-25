@@ -10,6 +10,8 @@ from rest_framework import status
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.decorators import action
 
 from backend.utils.email_sender import EmailSender
 from backend.utils.jwt_tokens import verify_token
@@ -25,31 +27,49 @@ from .serializers import (
     RegisterSerializer,
     ChangePasswordSerializer,
     OAuthCodeSerializer,
+    UserRetrieveSerializer,
+    UserUpdateSerializer,
+    UserListSerializer,
+    UserSerializer,
+    meNeedTokenSerializer,
 )
 
+class UserViewSet(ModelViewSet):
+    queryset = User.objects.all().order_by("username")
 
-class Register(CreateAPIView):
-    serializer_class = RegisterSerializer
-    queryset = User.objects.all()
-
-
-class LoginView(APIView):
-    def post(self, request):
-        serializer = LoginSerializer(data=request.data)
+    def get_serializer_class(self):
+        if self.action == "create":
+            return RegisterSerializer
+        elif self.action == "retrieve":
+            return UserRetrieveSerializer
+        elif self.action == "list":
+            return UserListSerializer
+        elif self.action == "update":
+            return UserUpdateSerializer
+        elif self.action == "partial_update":
+            return UserUpdateSerializer
+        elif self.action == "destroy":
+            return UserSerializer
+        return super().get_serializer_class()
+        
+    @action(methods=["POST"], detail=False, url_path="login", url_name="login", serializer_class=LoginSerializer)
+    def login(self, request):
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class MeView(APIView):
-    def post(self, request):
+    
+    @action(methods=["POST"], detail=False, url_path="me", url_name="me", serializer_class=meNeedTokenSerializer)
+    def me(self, request):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(verify_token(request.data["token"]), status=status.HTTP_200_OK)
-
-
-class PasswordResetView(APIView):
-    def post(self, request):
+    
+    @action(methods=["POST"], detail=False, url_path="pass-reset", url_name="pass-reset", serializer_class=PasswordResetSerializer)
+    def password_reset(self, request):
         emails = EmailSender()
-        serializer = PasswordResetSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         username_or_email = serializer.validated_data["username_or_email"]
@@ -78,17 +98,15 @@ class PasswordResetView(APIView):
         emails.send_email_html(user.email, "Recover Password Request", email_content_inline)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
-class RefreshTokenView(APIView):
-    def post(self, request):
-        serializer = RefreshTokenSerializer(data=request.data)
+    @action(methods=["POST"], detail=False, url_path="refresh", url_name="refresh", serializer_class=RefreshTokenSerializer)
+    def refresh(self, request):
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class LogoutView(APIView):
-    def post(self, request):
-        serializer = LogoutSerializer(data=request.data)
+    
+    @action(methods=["POST"], detail=False, url_path="logout", url_name="logout", serializer_class=LogoutSerializer)
+    def logout(self, request):
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.validated_data["user"]
             user.is_connected = False
@@ -97,22 +115,20 @@ class LogoutView(APIView):
             refresh_token.delete()
             return Response(status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class ChangePasswordView(APIView):
-    def post(self, request):
-        serializer = ChangePasswordSerializer(data=request.data)
+    
+    @action(methods=["POST"], detail=False, url_path="change-password", url_name="change-password", serializer_class=ChangePasswordSerializer)
+    def change_password(self, request):
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user: User = serializer.validated_data
         user.set_password(request.data.get("new_password"))
         user.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class OAuthView(APIView):
-    def post(self, request):
-        serializer = OAuthCodeSerializer(data=request.data)
+    
+    @action(methods=["POST"], detail=False, url_path="oauth", url_name="oauth", serializer_class=OAuthCodeSerializer)   
+    def oauth(self, request):
+        serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
