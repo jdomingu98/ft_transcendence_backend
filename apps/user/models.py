@@ -38,7 +38,7 @@ class User(AbstractBaseUser):
 
     id42 = models.TextField(null=True)
 
-    two_factor_enabled = models.BooleanField(default=False, blank=True, null=True)
+    two_factor_enabled = models.BooleanField(default=False, blank=True)
 
     USERNAME_FIELD = "username"
     objects = BaseUserManager()
