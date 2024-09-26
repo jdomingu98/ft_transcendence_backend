@@ -1,6 +1,9 @@
 # Base image
 FROM python:3.12-slim
 
+# Install gunicorn
+RUN pip install gunicorn
+
 # Set environment variables
 # Avoid .pyc files generation, which saves disk space
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -15,6 +18,9 @@ COPY . /app/
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Execute db migrations
+RUN python manage.py migrate
 
 # Expose the port for the Django app
 EXPOSE 8000
