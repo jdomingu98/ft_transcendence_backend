@@ -166,8 +166,6 @@ SMTP_PASSWORD = env("SMTP_PASSWORD")
 
 # Cache Settings
 
-# settings.py
-
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
