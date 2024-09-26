@@ -1,8 +1,6 @@
 import requests
 import os
-from django.db.utils import IntegrityError
 from apps.user.models import User
-from rest_framework import serializers
 
 
 def get_access_token(code):
