@@ -1,22 +1,19 @@
-import os
-from datetime import datetime, timedelta, timezone
 
-import pynliner
-import jwt
-from django.db.models import Q
-from django.shortcuts import get_object_or_404
-from django.template.loader import render_to_string
 from rest_framework import status
-from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 
-from backend.utils.email_sender import EmailSender
 from backend.utils.jwt_tokens import verify_token
 from backend.utils.read_keys import read_private_key
 from backend.utils.oauth_utils import get_access_token, get_user_info, get_or_create_user
+from backend.utils.pass_reset_utils import (
+    get_user_by_username_or_email,
+    generate_reset_token,
+    create_reset_link,
+    render_email_content,
+    send_reset_email,
+)
 
 from ..models import RefreshToken, User
 from .serializers import (
@@ -68,35 +65,23 @@ class UserViewSet(ModelViewSet):
     
     @action(methods=["POST"], detail=False, url_path="pass-reset", url_name="pass-reset", serializer_class=PasswordResetSerializer)
     def password_reset(self, request):
-        emails = EmailSender()
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
 
-        username_or_email = serializer.validated_data["username_or_email"]
-        user = get_object_or_404(User, Q(email=username_or_email) | Q(username=username_or_email))
+            username_or_email = serializer.validated_data["username_or_email"]
+            user = get_user_by_username_or_email(username_or_email)
 
-        private_key = read_private_key()
+            private_key = read_private_key()
 
-        payload = {
-            "user_id": user.id,
-            "change_password": True,
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-            "iat": datetime.now(timezone.utc),
-        }
+            token = generate_reset_token(user.id, private_key)
+            reset_link = create_reset_link(token)
+            email_content = render_email_content(user.username, reset_link)
+            send_reset_email(user.email, email_content)
 
-        token = jwt.encode(payload, private_key, algorithm="RS256")
-
-        frontend_url = os.getenv("FRONTEND_URL")
-
-        reset_link = f"{frontend_url}/reset-password/?k={token}"
-
-        email_content = render_to_string("changePassword.html", {"username": user.username, "reset_link": reset_link})
-
-        inliner = pynliner.Pynliner()
-        email_content_inline = inliner.from_string(email_content).run()
-
-        emails.send_email_html(user.email, "Recover Password Request", email_content_inline)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=["POST"], detail=False, url_path="refresh", url_name="refresh", serializer_class=RefreshTokenSerializer)
     def refresh(self, request):
