@@ -1,15 +1,10 @@
-from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
-from django.db.models import Q
 from datetime import datetime, timedelta, timezone
 import jwt
 import os
 import pynliner
 from apps.user.models import User
 from .email_sender import EmailSender
-
-def get_user_by_username_or_email(username_or_email):
-    return get_object_or_404(User, Q(email=username_or_email) | Q(username=username_or_email))
 
 def generate_reset_token(user_id, private_key):
     payload = {

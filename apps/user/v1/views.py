@@ -3,12 +3,13 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
+from django.shortcuts import get_object_or_404
+from django.db.models import Q
 
 from backend.utils.jwt_tokens import verify_token
 from backend.utils.read_keys import read_private_key
 from backend.utils.oauth_utils import get_access_token, get_user_info, get_or_create_user
 from backend.utils.pass_reset_utils import (
-    get_user_by_username_or_email,
     generate_reset_token,
     create_reset_link,
     render_email_content,
@@ -70,7 +71,7 @@ class UserViewSet(ModelViewSet):
             serializer.is_valid(raise_exception=True)
 
             username_or_email = serializer.validated_data["username_or_email"]
-            user = get_user_by_username_or_email(username_or_email)
+            user = get_object_or_404(User, Q(email=username_or_email) | Q(username=username_or_email))
 
             private_key = read_private_key()
 
