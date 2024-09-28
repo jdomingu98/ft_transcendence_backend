@@ -15,6 +15,7 @@ disable = """
     too-many-ancestors,
     wrong-import-order,
     ungrouped-imports,
+    broad-exception-caught,
 """
 enable = "useless-suppression"
 
