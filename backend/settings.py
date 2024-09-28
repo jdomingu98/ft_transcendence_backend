@@ -163,3 +163,23 @@ SMTP_SERVER = env("SMTP_SERVER")
 SMTP_PORT = env("SMTP_PORT")
 SMTP_EMAIL = env("SMTP_EMAIL")
 SMTP_PASSWORD = env("SMTP_PASSWORD")
+
+# Cache Settings
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://redis:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'SOCKET_TIMEOUT': 5,  # Socket waiting time (seconds)
+            'PICKLE_VERSION': 5,  # Pickle version, if necessary
+            'KEY_PREFIX': 'tr:',  # Prefix for cache keys, to avoid collisions
+            'CONNECTION_POOL_KWARGS': {
+                'max_connections': 100,  # Maximum number of connections
+            },
+            'IGNORE_EXCEPTIONS': True,  # Ignore exceptions if Redis is down
+            'DEFAULT_TIMEOUT': 300,  # Default expiry time (seconds) - 5 minutes
+        }
+    }
+}
