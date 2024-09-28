@@ -26,7 +26,4 @@ RUN yes | ssh-keygen -t rsa -b 2048 -m PEM -f jwtRS256.key -N "$PASSPHRASE"
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN python manage.py migrate
-
-# Run the Django app
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+ENTRYPOINT ["sh", "entrypoint.sh"]
