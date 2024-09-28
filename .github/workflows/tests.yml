@@ -40,9 +40,9 @@ jobs:
         DJANGO_DEBUG: ${{ secrets.DJANGO_DEBUG }}
         DJANGO_HTTPS: ${{ secrets.DJANGO_HTTPS }}
         DB_ENGINE: ${{ secrets.DB_ENGINE }}
-        DB_NAME: ${{ secrets.DB_NAME }}
-        DB_USER: ${{ secrets.DB_USER }}
-        DB_PASSWD: ${{ secrets.DB_PASSWD }}
+        POSTGRES_DB: ${{ secrets.DB_NAME }}
+        POSTGRES_USER: ${{ secrets.DB_USER }}
+        POSTGRES_PASSWORD: ${{ secrets.DB_PASSWD }}
         DB_HOST: ${{ secrets.DB_HOST }}
         DB_PORT: ${{ secrets.DB_PORT }}
         SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
