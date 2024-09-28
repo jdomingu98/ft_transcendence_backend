@@ -26,10 +26,38 @@ environ.Env.read_env()
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env("DJANGO_DEBUG")
+DEBUG = env("DJANGO_DEBUG") #False on production
 
-ALLOWED_HOSTS: list = []
+# Redirect HTTP to HTTPS
+SECURE_SSL_REDIRECT = env("DJANGO_HTTPS") #True on production
 
+# HSTS (HTTP Strict Transport Security) assert that navigators only communicate with server over HTTPS
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # Subdomains are included
+SECURE_HSTS_PRELOAD = True  # Preload HSTS on the navigators
+
+# Improve security with XSS filter protection and other secutity headers
+SECURE_BROWSER_XSS_FILTER = True  # Activate XSS filters on navigators
+SECURE_CONTENT_TYPE_NOSNIFF = True  # Avoid MIME type based attacks
+X_FRAME_OPTIONS = 'DENY'  # Avoid site for loading into an iframe
+
+# Asserts that session cookies and CSRF are only transmitted over HTTPS
+SESSION_COOKIE_SECURE = True  # Send session cookie only over HTTPS
+CSRF_COOKIE_SECURE = True  # Send CSRF cookie only over HTTPS
+
+# Domain/IP must be included here
+# Protects against Host Header attacks. Django only responds to requests coming from the indicated domains.
+ALLOWED_HOSTS: list = ['localhost']
+
+# Detect Nginx requests as secure, because the proxy manages the HTTPS layer
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Avoid problems while developing
+if DEBUG:
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    SECURE_HSTS_SECONDS = 0
 
 # Application definition
 
