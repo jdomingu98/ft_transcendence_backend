@@ -74,8 +74,8 @@ class UserViewSet(ModelViewSet):
             send_reset_email(user)
 
             return Response(status=status.HTTP_204_NO_CONTENT)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            return Response({"error": "ERROR.PASSWORD_RESET"}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(
         methods=["POST"], detail=False, url_path="refresh", url_name="refresh", serializer_class=RefreshTokenSerializer
