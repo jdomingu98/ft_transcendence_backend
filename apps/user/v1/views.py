@@ -30,7 +30,7 @@ class UserViewSet(ModelViewSet):
     queryset = User.objects.all().order_by("username")
 
     def get_serializer_class(self):
-        serializer = super().get_serializer_class()
+        serializer = UserSerializer
         if self.action == "create":
             serializer = RegisterSerializer
         elif self.action == "retrieve":
