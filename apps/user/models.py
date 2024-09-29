@@ -3,6 +3,7 @@ from django.db import models
 from django.core.validators import RegexValidator
 
 from .enums import Language, Visibility
+from apps.game.models import Statistics
 
 
 class User(AbstractBaseUser):
@@ -42,6 +43,11 @@ class User(AbstractBaseUser):
 
     USERNAME_FIELD = "username"
     objects = BaseUserManager()
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if not hasattr(self, 'statistics'):
+            Statistics.objects.create(user=self)
 
 
 class RefreshToken(models.Model):
