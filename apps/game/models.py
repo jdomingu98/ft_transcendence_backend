@@ -1,7 +1,6 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-
-# Create your models here.
+import datetime
 
 
 class Statistics(models.Model):
@@ -9,20 +8,16 @@ class Statistics(models.Model):
 
     max_streak = models.IntegerField(default=0)
 
-    invididual_win_rate = models.IntegerField(default=100, validators=[MinValueValidator(0), MaxValueValidator(100)])
+    win_rate = models.IntegerField(default=100, validators=[MinValueValidator(0), MaxValueValidator(100)])
 
-    tournament_win_rate = models.IntegerField(default=100, validators=[MinValueValidator(0), MaxValueValidator(100)])
-
-    time_played = models.TimeField()
+    time_played = models.TimeField(default=datetime.time(0,0,0))
 
     punctuation = models.IntegerField(default=0)
 
-    total_match = models.IntegerField(default=0)
+    num_matches = models.IntegerField(default=0)
 
-    total_turney = models.IntegerField(default=0)
+    num_goals_scored = models.IntegerField(default=0)
 
-    total_goals = models.IntegerField(default=0)
+    num_goals_against = models.IntegerField(default=0)
 
-    total_goals_against = models.IntegerField(default=0)
-
-    total_goals_stopped = models.IntegerField(default=0)
+    num_goals_stopped = models.IntegerField(default=0)
