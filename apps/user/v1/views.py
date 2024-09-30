@@ -22,7 +22,7 @@ from .serializers import (
     UserUpdateSerializer,
     UserListSerializer,
     UserSerializer,
-    meNeedTokenSerializer,
+    MeNeedTokenSerializer,
 )
 
 
@@ -50,7 +50,7 @@ class UserViewSet(ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=["POST"], detail=False, url_path="me", url_name="me", serializer_class=meNeedTokenSerializer)
+    @action(methods=["POST"], detail=False, url_path="me", url_name="me", serializer_class=MeNeedTokenSerializer)
     def me(self, request):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():

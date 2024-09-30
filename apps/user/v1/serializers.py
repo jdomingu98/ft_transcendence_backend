@@ -90,7 +90,6 @@ class UserListSerializer(serializers.ModelSerializer):
         )
 
 class UserSerializer(serializers.ModelSerializer):
-    print("UserSerializer")
     class Meta:
         model = User
         fields = [
@@ -178,5 +177,5 @@ class ChangePasswordSerializer(serializers.Serializer):
 class OAuthCodeSerializer(serializers.Serializer):
     code = serializers.CharField(required=True)
 
-class meNeedTokenSerializer(serializers.Serializer):
+class MeNeedTokenSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
