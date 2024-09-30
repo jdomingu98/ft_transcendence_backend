@@ -8,7 +8,7 @@ from .utils import generate_user_mock
 
 
 class RegisterViewTest(APITestCase):
-    REGISTER_ENDPOINT = "/api/v1/user/register/"
+    REGISTER_ENDPOINT = "/api/v1/user/"
     response: Any
 
     def test_register_user(self):
