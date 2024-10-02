@@ -127,6 +127,8 @@ class UserViewSet(ModelViewSet):
         if not user_info:
             return Response({"error": "ERROR.OAUTH.USER_INFO"}, status=status.HTTP_400_BAD_REQUEST)
         user = get_or_create_user(user_info)
+        if not user:
+            return Response({"error": "ERROR.OAUTH.EMAIL_EXISTS"}, status=status.HTTP_400_BAD_REQUEST)
         login_serializer = LoginSerializer(user)
 
         return Response(
