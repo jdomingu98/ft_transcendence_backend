@@ -37,7 +37,7 @@ def get_or_create_user(user_info):
     email = user_info["email"]
 
     filterUser = User.objects.filter(email=email).first()
-    if not filterUser.id42:
+    if filterUser and not filterUser.id42:
         return None
     
     if filterUser:
