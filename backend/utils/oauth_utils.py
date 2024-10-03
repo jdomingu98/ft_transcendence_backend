@@ -36,9 +36,16 @@ def get_or_create_user(user_info):
     username = user_info["login"]
     email = user_info["email"]
 
+    filterUser = User.objects.filter(email=email).first()
+    if filterUser and not filterUser.id42:
+        return None
+    
+    if filterUser:
+        return filterUser
+
     if User.objects.filter(username=username).exists():
         username = f"{username}_42"
 
-    user, _ = User.objects.get_or_create(id42=id_42, defaults={"username": username, "email": email})
+    user = User.objects.create(id42=id_42, username=username, email=email)
 
     return user

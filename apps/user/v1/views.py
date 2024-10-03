@@ -29,8 +29,9 @@ from .serializers import (
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all().order_by("username")
 
+    serializer_class = UserSerializer
     def get_serializer_class(self):
-        serializer = UserSerializer
+        serializer = super().get_serializer_class()
         if self.action == "create":
             serializer = RegisterSerializer
         elif self.action == "retrieve":
@@ -118,17 +119,16 @@ class UserViewSet(ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
         code = serializer.validated_data["code"]
         access_token = get_access_token(code)
         if not access_token:
             return Response({"error": "ERROR.OAUTH.TOKEN"}, status=status.HTTP_400_BAD_REQUEST)
-
         user_info = get_user_info(access_token)
         if not user_info:
             return Response({"error": "ERROR.OAUTH.USER_INFO"}, status=status.HTTP_400_BAD_REQUEST)
-
         user = get_or_create_user(user_info)
+        if not user:
+            return Response({"error": "ERROR.OAUTH.EMAIL_EXISTS"}, status=status.HTTP_400_BAD_REQUEST)
         login_serializer = LoginSerializer(user)
 
         return Response(
