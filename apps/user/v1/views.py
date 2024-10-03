@@ -63,11 +63,9 @@ class UserViewSet(ModelViewSet):
         if serializer.is_valid():
             username = serializer.validated_data["username"]
             user = User.objects.get(username=username)
-            try:
-                if(verify_otp_code(user, request.data["code"])):
-                    return Response(LoginSerializer(user).data, status=status.HTTP_200_OK)
-            except Exception as e:
-                return Response({"error":str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            if(verify_otp_code(user, request.data["code"])):
+                return Response(LoginSerializer(user).data, status=status.HTTP_200_OK)
+            return Response({"error": "ERROR.OTP.CODE"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

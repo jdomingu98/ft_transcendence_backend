@@ -38,16 +38,14 @@ def verify_otp_code(user: User, code: str):
 
     if otp_expired.exists():
         otp_expired.delete()
-        raise Exception("OTP code has expired")
-    
+
     otp_exists = OTPCode.objects.filter(
         user_id=user.id,
         code=code,
         expiration_time__gt=timezone.now()
-    )
+    ).exists()
 
-    if not otp_exists.exists():
-        raise Exception("Invalid OTP code")
+    if otp_exists:
+        OTPCode.objects.filter(user_id=user.id).delete()
 
-    OTPCode.objects.filter(user_id=user.id).delete()
-    return True
+    return otp_exists
