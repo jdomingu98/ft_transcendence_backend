@@ -18,7 +18,7 @@ def send_otp_code(user: User):
     code = generate_code()
     OTPCode.objects.create(
         code=code,
-        expiration_time=timezone.now() + timedelta(minutes=1),
+        expiration_time=timezone.now() + timedelta(minutes=5),
         user=user
     )
 
