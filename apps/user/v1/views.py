@@ -8,6 +8,7 @@ from django.db.models import Q
 from backend.utils.jwt_tokens import verify_token
 from backend.utils.oauth_utils import get_access_token, get_user_info, get_or_create_user
 from backend.utils.pass_reset_utils import send_reset_email
+from apps.game.models import Statistics
 
 from ..models import RefreshToken, User
 from .serializers import (
@@ -23,6 +24,7 @@ from .serializers import (
     UserListSerializer,
     UserSerializer,
     MeNeedTokenSerializer,
+    LeaderboardSerializer,
 )
 
 
@@ -78,9 +80,7 @@ class UserViewSet(ModelViewSet):
         except Exception:
             return Response({"error": "ERROR.PASSWORD_RESET"}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(
-        methods=["POST"], detail=False, url_path="refresh", url_name="refresh", serializer_class=RefreshTokenSerializer
-    )
+    @action(methods=["POST"], detail=False, url_path="refresh", url_name="refresh", serializer_class=RefreshTokenSerializer)
     def refresh(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -135,3 +135,9 @@ class UserViewSet(ModelViewSet):
             login_serializer.data,
             status=status.HTTP_200_OK,
         )
+    
+    @action(methods=["GET"], detail=False, url_path="leaderboard", url_name="leaderboard", serializer_class=LeaderboardSerializer)
+    def leaderboard(self,request):
+        top_users = Statistics.objects.select_related('user').order_by('-punctuation')[:10]
+        serializer = self.get_serializer(top_users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
