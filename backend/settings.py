@@ -26,10 +26,38 @@ environ.Env.read_env()
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env("DJANGO_DEBUG")
+DEBUG = env("DJANGO_DEBUG") #False on production
 
-ALLOWED_HOSTS: list = []
+# Redirect HTTP to HTTPS
+SECURE_SSL_REDIRECT = env("DJANGO_HTTPS") #True on production
 
+# HSTS (HTTP Strict Transport Security) assert that navigators only communicate with server over HTTPS
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # Subdomains are included
+SECURE_HSTS_PRELOAD = True  # Preload HSTS on the navigators
+
+# Improve security with XSS filter protection and other secutity headers
+SECURE_BROWSER_XSS_FILTER = True  # Activate XSS filters on navigators
+SECURE_CONTENT_TYPE_NOSNIFF = True  # Avoid MIME type based attacks
+X_FRAME_OPTIONS = 'DENY'  # Avoid site for loading into an iframe
+
+# Asserts that session cookies and CSRF are only transmitted over HTTPS
+SESSION_COOKIE_SECURE = True  # Send session cookie only over HTTPS
+CSRF_COOKIE_SECURE = True  # Send CSRF cookie only over HTTPS
+
+# Domain/IP must be included here
+# Protects against Host Header attacks. Django only responds to requests coming from the indicated domains.
+ALLOWED_HOSTS: list = ['localhost']
+
+# Detect Nginx requests as secure, because the proxy manages the HTTPS layer
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Avoid problems while developing
+if DEBUG:
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    SECURE_HSTS_SECONDS = 0
 
 # Application definition
 
@@ -82,9 +110,9 @@ WSGI_APPLICATION = "backend.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": env("DB_ENGINE"),
-        "NAME": env("DB_NAME"),
-        "USER": env("DB_USER"),
-        "PASSWORD": env("DB_PASSWD"),
+        "NAME": env("POSTGRES_DB"),
+        "USER": env("POSTGRES_USER"),
+        "PASSWORD": env("POSTGRES_PASSWORD"),
         "HOST": env("DB_HOST"),
         "PORT": env("DB_PORT"),
     }
@@ -163,3 +191,23 @@ SMTP_SERVER = env("SMTP_SERVER")
 SMTP_PORT = env("SMTP_PORT")
 SMTP_EMAIL = env("SMTP_EMAIL")
 SMTP_PASSWORD = env("SMTP_PASSWORD")
+
+# Cache Settings
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://redis:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'SOCKET_TIMEOUT': 5,  # Socket waiting time (seconds)
+            'PICKLE_VERSION': 5,  # Pickle version, if necessary
+            'KEY_PREFIX': 'tr:',  # Prefix for cache keys, to avoid collisions
+            'CONNECTION_POOL_KWARGS': {
+                'max_connections': 100,  # Maximum number of connections
+            },
+            'IGNORE_EXCEPTIONS': True,  # Ignore exceptions if Redis is down
+            'DEFAULT_TIMEOUT': 300,  # Default expiry time (seconds) - 5 minutes
+        }
+    }
+}

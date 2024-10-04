@@ -1,0 +1,10 @@
+.git
+.github
+.flake8
+.gitignore
+.pre-commit-config.yml
+LICENSE
+README.md
+__pycache__
+.env.example
+*.pyc
