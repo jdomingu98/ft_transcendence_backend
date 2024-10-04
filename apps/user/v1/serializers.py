@@ -55,6 +55,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         return data
 
 class UserRetrieveSerializer(serializers.ModelSerializer):
+    max_streak = serializers.IntegerField(source="statistics.max_streak", read_only=True)
+    win_rate = serializers.IntegerField(source="statistics.win_rate", read_only=True)
+    time_played = serializers.TimeField(source="statistics.time_played", read_only=True)
+    num_goals_scored = serializers.IntegerField(source="statistics.num_goals_scored", read_only=True)
+    num_goals_against = serializers.IntegerField(source="statistics.num_goals_against", read_only=True)
+    num_goals_stopped = serializers.IntegerField(source="statistics.num_goals_stopped", read_only=True)
+
     class Meta:
         model = User
         fields = (
@@ -66,6 +73,12 @@ class UserRetrieveSerializer(serializers.ModelSerializer):
             "visibility",
             "is_connected",
             "language",
+            "max_streak",
+            "win_rate",
+            "time_played",
+            "num_goals_scored",
+            "num_goals_against",
+            "num_goals_stopped",
         )
 
 class UserUpdateSerializer(serializers.ModelSerializer):
