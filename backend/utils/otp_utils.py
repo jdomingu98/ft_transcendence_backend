@@ -14,11 +14,13 @@ def generate_code(length=6):
 def send_otp_code(user: User):
     if(OTPCode.objects.filter(user_id=user.id, expiration_time__gt=timezone.now()).exists()):
         return
-
+    
+    OTPCode.objects.filter(user_id=user.id).delete()
+    
     code = generate_code()
     OTPCode.objects.create(
         code=code,
-        expiration_time=timezone.now() + timedelta(minutes=5),
+        expiration_time=timezone.now() + timedelta(minutes=1),
         user=user
     )
 
@@ -30,15 +32,6 @@ def send_otp_code(user: User):
     )
 
 def verify_otp_code(user: User, code: str):
-    otp_expired = OTPCode.objects.filter(
-        user_id=user.id,
-        code=code,
-        expiration_time__lt=timezone.now()
-    )
-
-    if otp_expired.exists():
-        otp_expired.delete()
-
     otp_exists = OTPCode.objects.filter(
         user_id=user.id,
         code=code,
