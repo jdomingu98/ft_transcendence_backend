@@ -9,7 +9,7 @@ from backend.utils.jwt_tokens import verify_token
 from backend.utils.oauth_utils import get_access_token, get_user_info, get_or_create_user
 from backend.utils.pass_reset_utils import send_reset_email
 
-from ..models import RefreshToken, User
+from ..models import RefreshToken, User, FriendShip
 from .serializers import (
     LoginSerializer,
     LogoutSerializer,
@@ -22,7 +22,7 @@ from .serializers import (
     UserUpdateSerializer,
     UserListSerializer,
     UserSerializer,
-    MeNeedTokenSerializer,
+    MeNeedTokenSerializer, FriendsSerializer,
 )
 
 
@@ -135,3 +135,10 @@ class UserViewSet(ModelViewSet):
             login_serializer.data,
             status=status.HTTP_200_OK,
         )
+
+class FriendsViewSet(ModelViewSet):
+    serializer_class = FriendsSerializer
+
+    def get_queryset(self, *args, **kwargs):
+        user_pk = kwargs.get("user_pk")
+        return FriendShip.objects.filter(user=user_pk)
