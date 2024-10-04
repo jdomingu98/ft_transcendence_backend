@@ -24,6 +24,8 @@ class User(AbstractBaseUser):
         unique=True,
     )
 
+    friends = models.ManyToManyField("user.User",through="user.FriendShip")
+
     profile_img = models.FileField(max_length=200, null=True)
 
     banner = models.FileField(max_length=200, null=True)
@@ -53,3 +55,8 @@ class User(AbstractBaseUser):
 class RefreshToken(models.Model):
     token = models.CharField(max_length=1024, unique=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+class FriendShip(models.Model):
+    user = models.ForeignKey("user.User", on_delete=models.CASCADE, related_name='friendships_requested')
+    friend = models.ForeignKey("user.User", on_delete=models.CASCADE, related_name='friendships_received')
+    accepted = models.BooleanField(default=False)
