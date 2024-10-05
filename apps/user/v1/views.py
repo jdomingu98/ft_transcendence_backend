@@ -115,12 +115,12 @@ class UserViewSet(ModelViewSet):
         access_token = get_access_token(code)
         if not access_token:
             return Response({"error": "ERROR.OAUTH.TOKEN"}, status=status.HTTP_400_BAD_REQUEST)
-
         user_info = get_user_info(access_token)
         if not user_info:
             return Response({"error": "ERROR.OAUTH.USER_INFO"}, status=status.HTTP_400_BAD_REQUEST)
-
         user = get_or_create_user(user_info)
+        if not user:
+            return Response({"error": "ERROR.OAUTH.EMAIL_EXISTS"}, status=status.HTTP_400_BAD_REQUEST)
         login_serializer = LoginSerializer(user)
 
         return Response(login_serializer.data, status=status.HTTP_200_OK)
