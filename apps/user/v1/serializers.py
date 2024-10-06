@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from backend.utils.jwt_tokens import generate_new_tokens, generate_new_tokens_from_user, verify_token
 
-from ..models import RefreshToken, User
+from ..models import RefreshToken, User, OTPCode
 
 class RegisterSerializer(serializers.ModelSerializer):
     repeat_password = serializers.CharField(max_length=255, write_only=True)
@@ -116,6 +116,7 @@ class LoginSerializer(serializers.Serializer):
         user = authenticate(username=data["username"], password=data["password"])
         if user is None:
             raise serializers.ValidationError("Invalid username/password.")
+        self.user = user
         return user
 
     def to_representation(self, instance):
@@ -179,3 +180,8 @@ class OAuthCodeSerializer(serializers.Serializer):
 
 class MeNeedTokenSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
+
+class OTPSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)
+    code = serializers.CharField(required=True)
+        

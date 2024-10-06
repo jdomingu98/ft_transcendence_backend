@@ -47,7 +47,7 @@ CSRF_COOKIE_SECURE = True  # Send CSRF cookie only over HTTPS
 
 # Domain/IP must be included here
 # Protects against Host Header attacks. Django only responds to requests coming from the indicated domains.
-ALLOWED_HOSTS: list = ['localhost']
+ALLOWED_HOSTS: list = ['127.0.0.1', 'localhost']
 
 # Detect Nginx requests as secure, because the proxy manages the HTTPS layer
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
