@@ -57,10 +57,12 @@ class RegisterSerializer(serializers.ModelSerializer):
 class UserRetrieveSerializer(serializers.ModelSerializer):
     max_streak = serializers.IntegerField(source="statistics.max_streak", read_only=True)
     win_rate = serializers.IntegerField(source="statistics.win_rate", read_only=True)
-    time_played = serializers.TimeField(source="statistics.time_played", read_only=True)
     num_goals_scored = serializers.IntegerField(source="statistics.num_goals_scored", read_only=True)
     num_goals_against = serializers.IntegerField(source="statistics.num_goals_against", read_only=True)
     num_goals_stopped = serializers.IntegerField(source="statistics.num_goals_stopped", read_only=True)
+    punctuation = serializers.IntegerField(source="statistics.punctuation", read_only=True)
+    time_played = serializers.SerializerMethodField()
+    position = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = User
@@ -79,7 +81,17 @@ class UserRetrieveSerializer(serializers.ModelSerializer):
             "num_goals_scored",
             "num_goals_against",
             "num_goals_stopped",
+            "punctuation",
+            "position",
         )
+
+    def get_time_played(self, obj):
+        duration = obj.statistics.time_played
+        total_seconds = duration.total_seconds()
+        hours = int(total_seconds // 3600)
+        minutes = int((total_seconds % 3600) // 60)
+        return f"{hours}h {minutes}m"
+
 
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
