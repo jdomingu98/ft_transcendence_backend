@@ -5,6 +5,7 @@ from rest_framework import serializers
 from backend.utils.jwt_tokens import generate_new_tokens, generate_new_tokens_from_user, verify_token
 
 from ..models import RefreshToken, User
+from apps.game.models import Statistics
 
 class RegisterSerializer(serializers.ModelSerializer):
     repeat_password = serializers.CharField(max_length=255, write_only=True)
@@ -179,3 +180,11 @@ class OAuthCodeSerializer(serializers.Serializer):
 
 class MeNeedTokenSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
+
+class LeaderboardSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username')
+    profile_img = serializers.ImageField(source='user.profile_img')
+    user_id = serializers.IntegerField(source='user.id')
+    class Meta:
+        model = Statistics
+        fields = ['punctuation', 'username', 'profile_img', 'user_id']
