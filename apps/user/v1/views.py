@@ -53,7 +53,6 @@ class UserViewSet(ModelViewSet):
         user: User = serializer.user
         if user.two_factor_enabled:
             send_otp_code(user)
-            return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     @action(methods=["POST"], detail=False, url_path="otp", url_name="otp",serializer_class=OTPSerializer)

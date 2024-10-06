@@ -120,7 +120,10 @@ class LoginSerializer(serializers.Serializer):
         return user
 
     def to_representation(self, instance):
-        access_token, refresh_token = generate_new_tokens_from_user(instance.id, instance.email)
+        access_token, refresh_token = (
+            generate_new_tokens_from_user(instance.id, instance.email)
+            if not instance.two_factor_enabled else (None, None)
+        )
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
