@@ -10,7 +10,7 @@ class Statistics(models.Model):
 
     win_rate = models.IntegerField(default=100, validators=[MinValueValidator(0), MaxValueValidator(100)])
 
-    time_played = models.TimeField(default=datetime.time(0,0,0))
+    time_played = models.DurationField(default=datetime.time(0,0,0))
 
     punctuation = models.IntegerField(default=0)
 
