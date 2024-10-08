@@ -196,6 +196,11 @@ class OTPSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     code = serializers.CharField(required=True)
 
+    def validate(self, data):
+        user = User.objects.get(username=data["username"])
+        self.user = user
+        return user
+
     def to_representation(self, instance):
         access_token, refresh_token = generate_new_tokens_from_user(instance.id, instance.email)
         return {
