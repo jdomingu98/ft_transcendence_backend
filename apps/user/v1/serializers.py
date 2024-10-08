@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate, password_validation
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
+from django.shortcuts import get_object_or_404
 
 from backend.utils.jwt_tokens import generate_new_tokens, generate_new_tokens_from_user, verify_token
 
@@ -197,7 +198,7 @@ class OTPSerializer(serializers.Serializer):
     code = serializers.CharField(required=True)
 
     def validate(self, data):
-        user = User.objects.get(username=data["username"])
+        user = get_object_or_404(User, username=data["username"])
         self.user = user
         return user
 

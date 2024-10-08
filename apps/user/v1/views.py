@@ -59,8 +59,7 @@ class UserViewSet(ModelViewSet):
     def otp(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data["username"]
-        user = get_object_or_404(User, username=username)
+        user = serializer.validated_data
         if verify_otp_code(user, request.data["code"]):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response({"error": "ERROR.OTP.CODE"}, status=status.HTTP_400_BAD_REQUEST)
