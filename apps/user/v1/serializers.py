@@ -4,7 +4,8 @@ from rest_framework import serializers
 
 from backend.utils.jwt_tokens import generate_new_tokens, generate_new_tokens_from_user, verify_token
 
-from ..models import RefreshToken, User, OTPCode
+from ..models import RefreshToken, User
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     repeat_password = serializers.CharField(max_length=255, write_only=True)
@@ -54,6 +55,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Passwords do not match")
         return data
 
+
 class UserRetrieveSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -68,6 +70,7 @@ class UserRetrieveSerializer(serializers.ModelSerializer):
             "language",
         )
 
+
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -80,6 +83,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             "two_factor_enabled",
         )
 
+
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -88,6 +92,7 @@ class UserListSerializer(serializers.ModelSerializer):
             "username",
             "profile_img",
         )
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -104,6 +109,7 @@ class UserSerializer(serializers.ModelSerializer):
             'id42',
             'two_factor_enabled',
         ]
+
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(write_only=True)
@@ -181,10 +187,26 @@ class ChangePasswordSerializer(serializers.Serializer):
 class OAuthCodeSerializer(serializers.Serializer):
     code = serializers.CharField(required=True)
 
+
 class MeNeedTokenSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
+
 
 class OTPSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     code = serializers.CharField(required=True)
-        
+
+    def validate(self, data):
+        user = authenticate(username=data["username"], password=data["password"])
+        if user is None:
+            raise serializers.ValidationError("Invalid username/password.")
+        self.user = user
+        return user
+
+    def to_representation(self, instance):
+        access_token, refresh_token = generate_new_tokens_from_user(instance.id, instance.email)
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "two_factor_enabled": instance.two_factor_enabled
+        }
