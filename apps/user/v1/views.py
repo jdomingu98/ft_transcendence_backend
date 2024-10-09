@@ -9,8 +9,7 @@ from backend.utils.jwt_tokens import verify_token
 from backend.utils.oauth_utils import get_access_token, get_user_info, get_or_create_user
 from backend.utils.pass_reset_utils import send_reset_email
 from backend.utils.otp_utils import send_otp_code, verify_otp_code
-
-from ..models import RefreshToken, User, OTPCode
+from ..models import RefreshToken, User
 from .serializers import (
     LoginSerializer,
     LogoutSerializer,
@@ -32,6 +31,7 @@ class UserViewSet(ModelViewSet):
     queryset = User.objects.all().order_by("username")
 
     serializer_class = UserSerializer
+
     def get_serializer_class(self):
         serializer = super().get_serializer_class()
         if self.action == "create":
@@ -54,15 +54,14 @@ class UserViewSet(ModelViewSet):
         if user.two_factor_enabled:
             send_otp_code(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
-    @action(methods=["POST"], detail=False, url_path="otp", url_name="otp",serializer_class=OTPSerializer)
+
+    @action(methods=["POST"], detail=False, url_path="otp", url_name="otp", serializer_class=OTPSerializer)
     def otp(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data["username"]
-        user = get_object_or_404(User,username=username)
-        if(verify_otp_code(user, request.data["code"])):
-            return Response(LoginSerializer(user).data, status=status.HTTP_200_OK)
+        user = serializer.validated_data
+        if verify_otp_code(user, request.data["code"]):
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response({"error": "ERROR.OTP.CODE"}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=["POST"], detail=False, url_path="me", url_name="me", serializer_class=MeNeedTokenSerializer)
@@ -71,7 +70,7 @@ class UserViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         return Response(verify_token(request.data["token"]), status=status.HTTP_200_OK)
 
-    @action(methods=["POST"], detail=False,url_path="pass-reset",url_name="pass-reset", serializer_class=PasswordResetSerializer)
+    @action(methods=["POST"], detail=False, url_path="pass-reset", url_name="pass-reset", serializer_class=PasswordResetSerializer)
     def password_reset(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -96,7 +95,7 @@ class UserViewSet(ModelViewSet):
         refresh_token = RefreshToken.objects.get(token=serializer.validated_data["token"])
         refresh_token.delete()
         return Response(status=status.HTTP_200_OK)
-    
+
     @action(methods=["POST"], detail=False, url_path="change-password", url_name="change-password",serializer_class=ChangePasswordSerializer)
     def change_password(self, request):
         serializer = self.get_serializer(data=request.data)

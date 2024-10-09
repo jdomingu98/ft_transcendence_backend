@@ -11,8 +11,9 @@ def generate_code(length=6):
     code = ''.join(random.choices(characters, k=length))
     return code
 
+
 def send_otp_code(user: User):
-    if(OTPCode.objects.filter(user_id=user.id, expiration_time__gt=timezone.now()).exists()):
+    if OTPCode.objects.filter(user_id=user.id, expiration_time__gt=timezone.now()).exists():
         return
     
     OTPCode.objects.filter(user_id=user.id).delete()
@@ -26,10 +27,11 @@ def send_otp_code(user: User):
 
     EmailSender().send_email_template(
         user.email,
-        "Your two-factor sign in code", 
-        "oneTimePassword.html", 
+        "Your two-factor sign in code",
+        "oneTimePassword.html",
         {"code": code}
     )
+
 
 def verify_otp_code(user: User, code: str):
     otp_exists = OTPCode.objects.filter(
