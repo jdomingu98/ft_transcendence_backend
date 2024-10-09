@@ -13,3 +13,4 @@ class Language(models.TextChoices):
     SPANISH = "es", "Spanish"
     ENGLISH = "en", "English"
     FRENCH = "fr", "French"
+    CHINESE = "zh", "Simplified Chinese"
