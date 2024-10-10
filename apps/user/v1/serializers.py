@@ -182,9 +182,14 @@ class MeNeedTokenSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
 
 class LeaderboardSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='user.username')
-    profile_img = serializers.ImageField(source='user.profile_img')
-    user_id = serializers.IntegerField(source='user.id')
+    punctuation = serializers.IntegerField(source='statistics.punctuation')
     class Meta:
-        model = Statistics
-        fields = ['punctuation', 'username', 'profile_img', 'user_id']
+        model = User
+        fields = ['username', 'profile_img', 'id', 'punctuation']
+
+class UserLeaderboardSerializer(serializers.ModelSerializer):
+    punctuation = serializers.IntegerField(source='statistics.punctuation')
+    position = serializers.IntegerField(read_only=True)
+    class Meta:
+        model = User
+        fields = ['punctuation', 'position']

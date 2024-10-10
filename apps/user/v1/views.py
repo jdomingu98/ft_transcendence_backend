@@ -25,6 +25,7 @@ from .serializers import (
     UserSerializer,
     MeNeedTokenSerializer,
     LeaderboardSerializer,
+    UserLeaderboardSerializer
 )
 
 
@@ -138,6 +139,16 @@ class UserViewSet(ModelViewSet):
     
     @action(methods=["GET"], detail=False, url_path="leaderboard", url_name="leaderboard", serializer_class=LeaderboardSerializer)
     def leaderboard(self,request):
-        top_users = Statistics.objects.select_related('user').order_by('-punctuation')[:10]
+        top_users = User.objects.select_related('statistics').order_by('-statistics__punctuation')[:10]
         serializer = self.get_serializer(top_users, many=True)
+        serializer
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(methods=["GET"], detail=True, url_path="leaderboard", url_name="leaderboard_id", serializer_class=UserLeaderboardSerializer)
+    def leaderboard_id(self, request, pk=None):
+        user_list = User.objects.with_ranking()
+        user = next((i for i in user_list if i.id == int(pk)), None)
+        if not user:
+            return Response({"error": "ERROR.USER_NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
