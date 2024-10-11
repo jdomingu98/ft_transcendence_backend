@@ -1,11 +1,13 @@
 from django.contrib.auth import authenticate, password_validation
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
+from django.shortcuts import get_object_or_404
 
 from backend.utils.jwt_tokens import generate_new_tokens, generate_new_tokens_from_user, verify_token
 
 from ..models import RefreshToken, User
 from apps.game.models import Statistics
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     repeat_password = serializers.CharField(max_length=255, write_only=True)
@@ -55,6 +57,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Passwords do not match")
         return data
 
+
 class UserRetrieveSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -69,6 +72,7 @@ class UserRetrieveSerializer(serializers.ModelSerializer):
             "language",
         )
 
+
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -81,6 +85,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             "two_factor_enabled",
         )
 
+
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -89,6 +94,7 @@ class UserListSerializer(serializers.ModelSerializer):
             "username",
             "profile_img",
         )
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -106,6 +112,7 @@ class UserSerializer(serializers.ModelSerializer):
             'two_factor_enabled',
         ]
 
+
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(write_only=True)
     password = serializers.CharField(write_only=True)
@@ -117,10 +124,14 @@ class LoginSerializer(serializers.Serializer):
         user = authenticate(username=data["username"], password=data["password"])
         if user is None:
             raise serializers.ValidationError("Invalid username/password.")
+        self.user = user
         return user
 
     def to_representation(self, instance):
-        access_token, refresh_token = generate_new_tokens_from_user(instance.id, instance.email)
+        access_token, refresh_token = (
+            generate_new_tokens_from_user(instance.id, instance.email)
+            if not instance.two_factor_enabled else (None, None)
+        )
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
@@ -178,8 +189,10 @@ class ChangePasswordSerializer(serializers.Serializer):
 class OAuthCodeSerializer(serializers.Serializer):
     code = serializers.CharField(required=True)
 
+
 class MeNeedTokenSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
+
 
 class LeaderboardSerializer(serializers.ModelSerializer):
     punctuation = serializers.IntegerField(source='statistics.punctuation')
@@ -193,3 +206,21 @@ class UserLeaderboardSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['punctuation', 'position']
+
+
+class OTPSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)
+    code = serializers.CharField(required=True)
+
+    def validate(self, data):
+        user = get_object_or_404(User, username=data["username"])
+        self.user = user
+        return user
+
+    def to_representation(self, instance):
+        access_token, refresh_token = generate_new_tokens_from_user(instance.id, instance.email)
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "two_factor_enabled": instance.two_factor_enabled
+        }
