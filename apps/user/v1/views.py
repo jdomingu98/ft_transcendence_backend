@@ -8,25 +8,24 @@ from django.db.models import Q
 from backend.utils.jwt_tokens import verify_token
 from backend.utils.oauth_utils import get_access_token, get_user_info, get_or_create_user
 from backend.utils.pass_reset_utils import send_reset_email
-from apps.game.models import Statistics
 from backend.utils.otp_utils import send_otp_code, verify_otp_code
 from ..models import RefreshToken, User
 from .serializers import (
+    ChangePasswordSerializer,
     LoginSerializer,
     LogoutSerializer,
+    LeaderboardSerializer,
+    MeNeedTokenSerializer,
     PasswordResetSerializer,
-    RefreshTokenSerializer,
-    RegisterSerializer,
-    ChangePasswordSerializer,
     OAuthCodeSerializer,
+    OTPSerializer,
     UserRetrieveSerializer,
     UserUpdateSerializer,
     UserListSerializer,
     UserSerializer,
-    MeNeedTokenSerializer,
-    LeaderboardSerializer,
-    UserLeaderboardSerializer
-    OTPSerializer,
+    UserLeaderboardSerializer,
+    RefreshTokenSerializer,
+    RegisterSerializer,
 )
 
 
