@@ -4,26 +4,31 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from django.db.models import Q
-
+from backend.utils.authentication import Authentication
+from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import redirect
+import os
 from backend.utils.jwt_tokens import verify_token
 from backend.utils.oauth_utils import get_access_token, get_user_info, get_or_create_user
 from backend.utils.pass_reset_utils import send_reset_email
 from backend.utils.otp_utils import send_otp_code, verify_otp_code
 from ..models import RefreshToken, User
 from .serializers import (
+    ChangePasswordSerializer,
     LoginSerializer,
     LogoutSerializer,
+    LeaderboardSerializer,
+    MeNeedTokenSerializer,
     PasswordResetSerializer,
-    RefreshTokenSerializer,
-    RegisterSerializer,
-    ChangePasswordSerializer,
     OAuthCodeSerializer,
+    OTPSerializer,
     UserRetrieveSerializer,
     UserUpdateSerializer,
     UserListSerializer,
     UserSerializer,
-    MeNeedTokenSerializer,
-    OTPSerializer,
+    UserLeaderboardSerializer,
+    RefreshTokenSerializer,
+    RegisterSerializer,
 )
 
 
@@ -56,6 +61,8 @@ class UserViewSet(ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user: User = serializer.user
+        if not user.is_verified:
+            return Response({"error": "ERROR.USER.NOT_VERIFIED"}, status=status.HTTP_400_BAD_REQUEST)
         if user.two_factor_enabled:
             send_otp_code(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -127,3 +134,20 @@ class UserViewSet(ModelViewSet):
         login_serializer = LoginSerializer(user)
 
         return Response(login_serializer.data, status=status.HTTP_200_OK)
+    
+    @action(methods=["GET"], detail=False, url_path="leaderboard", url_name="leaderboard", serializer_class=UserLeaderboardSerializer,
+        authentication_classes=[Authentication], permission_classes=[IsAuthenticated])
+    def leaderboard(self,request):
+        user_list = User.objects.with_ranking()
+        user = next((i for i in user_list if i.id == request.user.id), None)
+        if not user:
+            return Response({"error": "ERROR.USER_NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(methods=["POST"], detail=True, url_path="verify_account", url_name="verify_account")
+    def verify_account(self, request, pk=None):
+        user = get_object_or_404(User, pk=pk)
+        user.is_verified = True
+        user.save()
+        return redirect(os.getenv("FRONTEND_URL"))

@@ -1,18 +1,14 @@
 from django.contrib.auth.models import BaseUserManager
-from django.db.models import Q, Count, OuterRef, Subquery
-from apps.game.models import Statistics
+from django.db.models import Window, F
+from django.db.models.functions import RowNumber
+    
 
 class UserManager(BaseUserManager):
     def with_ranking(self):
-        rank_subquery = (
-            Statistics.objects.filter(
-                Q(punctuation__gte=OuterRef('statistics__punctuation'))
-                |  Q(punctuation=OuterRef('statistics__punctuation'), user__username__lt=OuterRef('username'))
-            )
-            .values('punctuation')
-            .annotate(rank=Count('punctuation'))
+        users_with_rank = self.annotate(
+        position=Window(
+            expression=RowNumber(),
+            order_by=[F('statistics__punctuation').desc(), 'username']
         )
-        
-        return self.get_queryset().annotate(
-            position=Subquery(rank_subquery.values('rank')[:1])
-        ).order_by('position', 'username')
+        ).order_by('position')
+        return users_with_rank
