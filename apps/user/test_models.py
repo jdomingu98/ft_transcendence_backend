@@ -1,12 +1,9 @@
 from django.test import TestCase
-
+from datetime import timedelta
 from apps.user.models import User
-
 from .enums import Language, Visibility
-
 from django.core.exceptions import ValidationError
 from apps.game.models import Statistics
-
 
 class UserModelTest(TestCase):
     @classmethod
@@ -37,9 +34,12 @@ class UserModelTest(TestCase):
         user = User.objects.get(id=1)
         self.assertTrue(user.is_connected)
 
+    def test_statistics_time_played(self):
+        user = User.objects.get(id=1)
+        statistics = user.statistics
+        self.assertEqual(statistics.time_played, timedelta(0))
 
 class UserModelEmailTest(TestCase):
-
     def setUp(self):
         self.valid_emails = [
             "user@example.com",
