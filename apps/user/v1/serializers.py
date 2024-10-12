@@ -4,8 +4,8 @@ from rest_framework import serializers
 from django.shortcuts import get_object_or_404
 from backend.utils.jwt_tokens import generate_new_tokens, generate_new_tokens_from_user, verify_token
 from ..models import RefreshToken, User
+from apps.game.models import Statistics
 from backend.utils.conf_reg_utils import send_conf_reg
-
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -183,6 +183,23 @@ class OAuthCodeSerializer(serializers.Serializer):
 class MeNeedTokenSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
 
+class LeaderboardSerializer(serializers.ModelSerializer):
+    punctuation = serializers.IntegerField(source='statistics.punctuation')
+    class Meta:
+        model = User
+        fields = ['username', 'profile_img', 'id', 'punctuation']
+
+class UserLeaderboardSerializer(serializers.ModelSerializer):
+    position = serializers.IntegerField(read_only=True)
+    punctuation = serializers.IntegerField(source='statistics.punctuation')
+    leaderboard = serializers.SerializerMethodField(read_only=True)
+    class Meta:
+        model = User
+        fields = ['punctuation', 'position', 'leaderboard']
+
+    def get_leaderboard(self, obj):
+        top_users = User.objects.with_ranking()[:10]
+        return LeaderboardSerializer(top_users, many=True).data
 
 class OTPSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)

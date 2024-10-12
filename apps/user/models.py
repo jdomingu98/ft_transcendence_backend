@@ -4,6 +4,7 @@ from django.core.validators import RegexValidator
 
 from .enums import Language, Visibility
 from apps.game.models import Statistics
+from .manager import UserManager
 
 
 class User(AbstractBaseUser):
@@ -44,7 +45,7 @@ class User(AbstractBaseUser):
     two_factor_enabled = models.BooleanField(default=False, blank=True)
 
     USERNAME_FIELD = "username"
-    objects = BaseUserManager()
+    objects = UserManager()
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
