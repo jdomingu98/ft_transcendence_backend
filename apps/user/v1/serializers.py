@@ -2,17 +2,15 @@ from django.contrib.auth import authenticate, password_validation
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
-
 from backend.utils.jwt_tokens import generate_new_tokens, generate_new_tokens_from_user, verify_token
-
 from ..models import RefreshToken, User
+from backend.utils.conf_reg_utils import send_conf_reg
+
 
 
 class RegisterSerializer(serializers.ModelSerializer):
     repeat_password = serializers.CharField(max_length=255, write_only=True)
     password = serializers.CharField(max_length=255, write_only=True)
-    access_token = serializers.CharField(read_only=True)
-    refresh_token = serializers.CharField(read_only=True)
 
     class Meta:
         model = User
@@ -25,21 +23,14 @@ class RegisterSerializer(serializers.ModelSerializer):
             "profile_img",
             "banner",
             "repeat_password",
-            "access_token",
-            "refresh_token",
         )
 
     def create(self, validated_data):
         validated_data.pop("repeat_password", None)
         validated_data["password"] = make_password(validated_data["password"])
-        return User.objects.create(**validated_data)
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        access_token, refresh_token = generate_new_tokens_from_user(instance.id, instance.email)
-        representation["access_token"] = access_token
-        representation["refresh_token"] = refresh_token
-        return representation
+        user = User.objects.create(**validated_data)
+        send_conf_reg(user)
+        return user
 
     def validate_password(self, value):
         user = User(

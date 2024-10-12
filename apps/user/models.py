@@ -35,6 +35,8 @@ class User(AbstractBaseUser):
 
     is_connected = models.BooleanField(default=True)
 
+    is_verified = models.BooleanField(default=False)
+
     language = models.CharField(choices=Language.choices, default=Language.SPANISH.value, max_length=2)
 
     id42 = models.TextField(null=True)
