@@ -193,7 +193,6 @@ class OAuthCodeSerializer(serializers.Serializer):
 class MeNeedTokenSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
 
-
 class LeaderboardSerializer(serializers.ModelSerializer):
     punctuation = serializers.IntegerField(source='statistics.punctuation')
     class Meta:
@@ -201,12 +200,16 @@ class LeaderboardSerializer(serializers.ModelSerializer):
         fields = ['username', 'profile_img', 'id', 'punctuation']
 
 class UserLeaderboardSerializer(serializers.ModelSerializer):
-    punctuation = serializers.IntegerField(source='statistics.punctuation')
     position = serializers.IntegerField(read_only=True)
+    punctuation = serializers.IntegerField(source='statistics.punctuation')
+    leaderboard = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = User
-        fields = ['punctuation', 'position']
+        fields = ['punctuation', 'position', 'leaderboard']
 
+    def get_leaderboard(self, obj):
+        top_users = User.objects.with_ranking()[:10]
+        return LeaderboardSerializer(top_users, many=True).data
 
 class OTPSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)

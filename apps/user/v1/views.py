@@ -4,7 +4,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from django.db.models import Q
-
+from backend.utils.authentication import Authentication
+from rest_framework.permissions import IsAuthenticated
 from backend.utils.jwt_tokens import verify_token
 from backend.utils.oauth_utils import get_access_token, get_user_info, get_or_create_user
 from backend.utils.pass_reset_utils import send_reset_email
@@ -125,17 +126,11 @@ class UserViewSet(ModelViewSet):
 
         return Response(login_serializer.data, status=status.HTTP_200_OK)
     
-    @action(methods=["GET"], detail=False, url_path="leaderboard", url_name="leaderboard", serializer_class=LeaderboardSerializer)
+    @action(methods=["GET"], detail=False, url_path="leaderboard", url_name="leaderboard", serializer_class=UserLeaderboardSerializer,
+        authentication_classes=[Authentication], permission_classes=[IsAuthenticated])
     def leaderboard(self,request):
-        top_users = User.objects.select_related('statistics').order_by('-statistics__punctuation')[:10]
-        serializer = self.get_serializer(top_users, many=True)
-        serializer
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @action(methods=["GET"], detail=True, url_path="leaderboard", url_name="leaderboard_id", serializer_class=UserLeaderboardSerializer)
-    def leaderboard_id(self, request, pk=None):
         user_list = User.objects.with_ranking()
-        user = next((i for i in user_list if i.id == int(pk)), None)
+        user = next((i for i in user_list if i.id == request.user.id), None)
         if not user:
             return Response({"error": "ERROR.USER_NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
         serializer = self.get_serializer(user)

@@ -30,5 +30,5 @@ def send_reset_email(user: User):
         user.email,
         "Recover Password Request",
         "changePassword.html",
-        {"username": user.username, "reset_link": reset_link},
+        {"username": user.username, "reset_dlink": reset_link},
     )
