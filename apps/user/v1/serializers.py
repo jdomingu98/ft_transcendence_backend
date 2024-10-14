@@ -181,9 +181,10 @@ class OAuthCodeSerializer(serializers.Serializer):
 class MeNeedTokenSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
 
-class FriendsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FriendShip
-        fields = (
-            "user", "friend"
-        )
+class FriendsListSerializer(serializers.Serializer):
+    friends_ids = serializers.ListField(child=serializers.IntegerField())
+ 
+
+class FriendSerializer(serializers.Serializer):
+    friend_id = serializers.IntegerField()
+

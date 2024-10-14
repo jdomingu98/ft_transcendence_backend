@@ -3,11 +3,12 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
-from django.db.models import Q
+from django.db.models import Q,F
 
 from backend.utils.jwt_tokens import verify_token
 from backend.utils.oauth_utils import get_access_token, get_user_info, get_or_create_user
 from backend.utils.pass_reset_utils import send_reset_email
+from django.core.exceptions import ValidationError
 
 from ..models import RefreshToken, User, FriendShip
 from .serializers import (
@@ -22,7 +23,9 @@ from .serializers import (
     UserUpdateSerializer,
     UserListSerializer,
     UserSerializer,
-    MeNeedTokenSerializer, FriendsSerializer,
+    MeNeedTokenSerializer, 
+    FriendSerializer,
+    FriendsListSerializer
 )
 
 
@@ -137,8 +140,83 @@ class UserViewSet(ModelViewSet):
         )
 
 class FriendsViewSet(ModelViewSet):
-    serializer_class = FriendsSerializer
+    serializer_class = FriendSerializer
 
-    def get_queryset(self, *args, **kwargs):
-        user_pk = kwargs.get("user_pk")
-        return FriendShip.objects.filter(user=user_pk)
+    def get_queryset(self):
+        return FriendShip.objects.all()
+    
+    def list(self, request, *args, **kwargs):
+        user = User.objects.get(pk=self.kwargs.get("user_pk"))
+        friendships = FriendShip.objects.filter(
+            Q(user_id=user.id) | Q(friend_id=user.id),
+            accepted=True
+        )
+        friend_ids = {
+            i.friend_id if i.user_id == user.id else i.user_id
+            for i in friendships
+        }
+        data = {'friends_ids': friend_ids}
+        serializer = FriendsListSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def get_serializer_class(self):
+        serializer = super().get_serializer_class()
+        return serializer
+    
+    def create(self, request, *args, **kwargs):
+        user = User.objects.get(pk=self.kwargs.get("user_pk"))
+        user_id = user.id
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        friend_id = serializer.validated_data.get("friend_id")
+
+        if user_id == friend_id:
+            return Response({'message': 'You cannot add yourself as a friend'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if (FriendShip.objects.filter(user_id=user_id, friend_id=friend_id).exists() | 
+            FriendShip.objects.filter(user_id=friend_id, friend_id=user_id).exists()):
+            return Response({'message': 'Friendship already exists'}, status=status.HTTP_400_BAD_REQUEST)
+
+        FriendShip.objects.create(user_id=user_id, friend_id=friend_id, accepted=False)
+        return Response({'message': 'Friendship requested'}, status=status.HTTP_201_CREATED)
+    
+    @action(methods=["POST"], detail=False, url_path="accept", url_name="accept", serializer_class=FriendSerializer)
+    def accept(self, request, *args, **kwargs):
+        user = User.objects.get(pk=self.kwargs.get("user_pk"))
+        user_id = user.id
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        friend_id = serializer.validated_data.get("friend_id")
+        friendShip = FriendShip.objects.get(
+            Q(user_id=friend_id, friend_id=user_id) 
+        )
+
+        if friendShip.accepted:
+            return Response({'message': 'Friendship already accepted'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        friendShip.accepted = True
+        friendShip.save()
+        return Response({'message': 'Friendship accepted'}, status=status.HTTP_200_OK)
+    
+    def delete(self, request, *args, **kwargs):
+        user = User.objects.get(pk=self.kwargs.get("user_pk"))
+        user_id = user.id
+
+        friend_id = request.data.get("friend_id")
+
+        friendship = FriendShip.objects.filter(
+            Q(user_id=user_id, friend_id=friend_id) | 
+            Q(user_id=friend_id, friend_id=user_id)
+        ).first()
+
+        if friendship:
+            friendship.delete()
+            return Response({'message': 'Friendship removed successfully'}, status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response({'message': 'Friendship not found'}, status=status.HTTP_404_NOT_FOUND)
