@@ -26,7 +26,7 @@ class RegisterSerializerTest(TestCase):
         data = generate_user_mock("testuser", "testuser@example.com", "testpassword123", "wrongpassword")
         serializer = RegisterSerializer(data=data)
         self.assertFalse(serializer.is_valid())
-        self.assertIn("Passwords do not match", str(serializer.errors))
+        self.assertIn("ERROR.PASSWORD.DONT_MATCH", str(serializer.errors))
 
     def test_create_user(self):
         data = generate_user_mock("testuser", "testuser@example.com", "testpassword123", "testpassword123")
