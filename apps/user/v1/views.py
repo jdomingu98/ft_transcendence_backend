@@ -4,34 +4,44 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from django.db.models import Q
-
+from backend.utils.authentication import Authentication
+from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import redirect
+import os
 from backend.utils.jwt_tokens import verify_token
 from backend.utils.oauth_utils import get_access_token, get_user_info, get_or_create_user
 from backend.utils.pass_reset_utils import send_reset_email
 from backend.utils.otp_utils import send_otp_code, verify_otp_code
-
-from ..models import RefreshToken, User, OTPCode
+from ..models import RefreshToken, User
 from .serializers import (
+    ChangePasswordSerializer,
     LoginSerializer,
     LogoutSerializer,
+    LeaderboardSerializer,
+    MeNeedTokenSerializer,
     PasswordResetSerializer,
-    RefreshTokenSerializer,
-    RegisterSerializer,
-    ChangePasswordSerializer,
     OAuthCodeSerializer,
+    OTPSerializer,
     UserRetrieveSerializer,
     UserUpdateSerializer,
     UserListSerializer,
     UserSerializer,
-    MeNeedTokenSerializer,
-    OTPSerializer,
+    UserLeaderboardSerializer,
+    RefreshTokenSerializer,
+    RegisterSerializer,
 )
 
 
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all().order_by("username")
-
     serializer_class = UserSerializer
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action == "retrieve":
+            queryset = User.objects.with_ranking()
+        return queryset
+
     def get_serializer_class(self):
         serializer = super().get_serializer_class()
         if self.action == "create":
@@ -51,19 +61,19 @@ class UserViewSet(ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user: User = serializer.user
+        if not user.is_verified:
+            return Response({"error": "ERROR.USER.NOT_VERIFIED"}, status=status.HTTP_400_BAD_REQUEST)
         if user.two_factor_enabled:
             send_otp_code(user)
-            return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
-    @action(methods=["POST"], detail=False, url_path="otp", url_name="otp",serializer_class=OTPSerializer)
+
+    @action(methods=["POST"], detail=False, url_path="otp", url_name="otp", serializer_class=OTPSerializer)
     def otp(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data["username"]
-        user = get_object_or_404(User,username=username)
-        if(verify_otp_code(user, request.data["code"])):
-            return Response(LoginSerializer(user).data, status=status.HTTP_200_OK)
+        user = serializer.validated_data
+        if verify_otp_code(user, request.data["code"]):
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response({"error": "ERROR.OTP.CODE"}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=["POST"], detail=False, url_path="me", url_name="me", serializer_class=MeNeedTokenSerializer)
@@ -72,7 +82,7 @@ class UserViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         return Response(verify_token(request.data["token"]), status=status.HTTP_200_OK)
 
-    @action(methods=["POST"], detail=False,url_path="pass-reset",url_name="pass-reset", serializer_class=PasswordResetSerializer)
+    @action(methods=["POST"], detail=False, url_path="pass-reset", url_name="pass-reset", serializer_class=PasswordResetSerializer)
     def password_reset(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -97,7 +107,7 @@ class UserViewSet(ModelViewSet):
         refresh_token = RefreshToken.objects.get(token=serializer.validated_data["token"])
         refresh_token.delete()
         return Response(status=status.HTTP_200_OK)
-    
+
     @action(methods=["POST"], detail=False, url_path="change-password", url_name="change-password",serializer_class=ChangePasswordSerializer)
     def change_password(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -124,3 +134,20 @@ class UserViewSet(ModelViewSet):
         login_serializer = LoginSerializer(user)
 
         return Response(login_serializer.data, status=status.HTTP_200_OK)
+    
+    @action(methods=["GET"], detail=False, url_path="leaderboard", url_name="leaderboard", serializer_class=UserLeaderboardSerializer,
+        authentication_classes=[Authentication], permission_classes=[IsAuthenticated])
+    def leaderboard(self,request):
+        user_list = User.objects.with_ranking()
+        user = next((i for i in user_list if i.id == request.user.id), None)
+        if not user:
+            return Response({"error": "ERROR.USER_NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(methods=["POST"], detail=True, url_path="verify_account", url_name="verify_account")
+    def verify_account(self, request, pk=None):
+        user = get_object_or_404(User, pk=pk)
+        user.is_verified = True
+        user.save()
+        return redirect(os.getenv("FRONTEND_URL"))

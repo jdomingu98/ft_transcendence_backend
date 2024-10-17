@@ -147,6 +147,8 @@ AUTH_USER_MODEL = "user.User"
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+BASE_URL = env("BASE_URL")
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",

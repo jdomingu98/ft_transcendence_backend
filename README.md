@@ -1,4 +1,4 @@
-# ft_trascendence v0.10.0
+# ft_trascendence v0.11.0
 A website where users can play on Pong tournaments. Final project of the 42school roadmap
 
 

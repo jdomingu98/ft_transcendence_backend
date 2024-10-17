@@ -1,9 +1,10 @@
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser
 from django.db import models
 from django.core.validators import RegexValidator
 
 from .enums import Language, Visibility
 from apps.game.models import Statistics
+from .manager import UserManager
 
 
 class User(AbstractBaseUser):
@@ -35,6 +36,8 @@ class User(AbstractBaseUser):
 
     is_connected = models.BooleanField(default=True)
 
+    is_verified = models.BooleanField(default=False)
+
     language = models.CharField(choices=Language.choices, default=Language.SPANISH.value, max_length=2)
 
     id42 = models.TextField(null=True)
@@ -42,7 +45,7 @@ class User(AbstractBaseUser):
     two_factor_enabled = models.BooleanField(default=False, blank=True)
 
     USERNAME_FIELD = "username"
-    objects = BaseUserManager()
+    objects = UserManager()
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
