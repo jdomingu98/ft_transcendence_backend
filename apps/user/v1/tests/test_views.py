@@ -24,7 +24,7 @@ class RegisterViewTest(APITestCase):
         data = generate_user_mock("testuser", "testuser@example.com", "testpassword123", "wrongpassword")
         self.when_user_is_registered(data)
         self.should_return_400()
-        self.assertIn("Passwords do not match", str(self.response.data))
+        self.assertIn("ERROR.PASSWORD.DONT_MATCH", str(self.response.data))
 
     def test_register_user_missing_field(self):
         data = {
@@ -40,7 +40,7 @@ class RegisterViewTest(APITestCase):
         data = generate_user_mock("testuser", "invalid-email", "my'secure'password", "my'secure'password")
         self.when_user_is_registered(data)
         self.should_return_400()
-        self.should_contain_field_error("email", "Enter a valid email address.")
+        self.should_contain_field_error("email", "ERROR.EMAIL.INVALID")
 
     def test_unique_username(self):
         data = generate_user_mock("testuser", "email1@test.com", "my'secure'password", "my'secure'password")
@@ -48,7 +48,7 @@ class RegisterViewTest(APITestCase):
         data2 = generate_user_mock("testuser", "email2@test.com", "my'secure'password", "my'secure'password")
         self.when_user_is_registered(data2)
         self.should_return_400()
-        self.should_contain_field_error("username", "user with this username already exists.")
+        self.should_contain_field_error("username", "ERROR.USERNAME.ALREADY_EXISTS")
 
     def test_unique_email(self):
         data = generate_user_mock("testuser", "sameemail@test.com", "my'secure'password", "my'secure'password")
@@ -56,7 +56,7 @@ class RegisterViewTest(APITestCase):
         data2 = generate_user_mock("testuser2", "sameemail@test.com", "my'secure'password", "my'secure'password")
         self.when_user_is_registered(data2)
         self.should_return_400()
-        self.should_contain_field_error("email", "user with this email already exists.")
+        self.should_contain_field_error("email", "ERROR.EMAIL.ALREADY_EXISTS")
 
     def when_user_is_registered(self, data):
         self.response = self.client.post(self.REGISTER_ENDPOINT, data, format="json")
