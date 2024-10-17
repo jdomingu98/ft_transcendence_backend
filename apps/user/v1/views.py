@@ -56,6 +56,12 @@ class UserViewSet(ModelViewSet):
             serializer = UserSerializer
         return serializer
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_202_ACCEPTED)
+
     @action(methods=["POST"], detail=False, url_path="login", url_name="login", serializer_class=LoginSerializer)
     def login(self, request):
         serializer = self.get_serializer(data=request.data)

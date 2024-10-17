@@ -14,11 +14,9 @@ class RegisterViewTest(APITestCase):
     def test_register_user(self):
         data = generate_user_mock("testuser", "testuser@example.com", "testpassword123", "testpassword123")
         self.when_user_is_registered(data)
-        self.should_return_201()
+        self.should_return_202()
         self.assertEqual(User.objects.count(), 1)
         self.assertEqual(User.objects.get().username, "testuser")
-        self.assertNotIn("password", self.response.data)
-        self.assertNotIn("repeat_password", self.response.data)
 
     def test_register_user_passwords_do_not_match(self):
         data = generate_user_mock("testuser", "testuser@example.com", "testpassword123", "wrongpassword")
@@ -64,8 +62,8 @@ class RegisterViewTest(APITestCase):
     def should_return_400(self):
         self.assertEqual(self.response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def should_return_201(self):
-        self.assertEqual(self.response.status_code, status.HTTP_201_CREATED)
+    def should_return_202(self):
+        self.assertEqual(self.response.status_code, status.HTTP_202_ACCEPTED)
 
     def should_contain_field_error(self, field, error):
         self.assertIn(field, self.response.data)
