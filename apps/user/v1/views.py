@@ -56,6 +56,12 @@ class UserViewSet(ModelViewSet):
             serializer = UserSerializer
         return serializer
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_202_ACCEPTED)
+
     def retrieve(self, request, pk=None):
         try:
             user = self.get_object()
