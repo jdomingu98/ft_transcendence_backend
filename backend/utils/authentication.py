@@ -12,13 +12,14 @@ class Authentication(BaseAuthentication):
         if not authorization_header:
             return None
 
-        [key, token] = authorization_header.split(" ")
-        if key != "Bearer":
-            return None
+        token = authorization_header.split(" ")[1]
         user_dict = verify_token(token)
         user = User.objects.get(id=user_dict["user_id"])
 
         return (user, token)
+
+    def authenticate_header(self, request):
+        return 'Bearer'
 
 
 def validate_password(password, user=None, password_validators=None):
