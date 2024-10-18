@@ -125,7 +125,7 @@ class UserViewSet(ModelViewSet):
         user.save()
         refresh_token = RefreshToken.objects.filter(user=user)
         refresh_token.delete()
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=["POST"], detail=False, url_path="change-password", url_name="change-password", serializer_class=ChangePasswordSerializer)
     def change_password(self, request):
