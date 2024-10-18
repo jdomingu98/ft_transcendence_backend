@@ -1,14 +1,17 @@
-from django.contrib.auth import authenticate, password_validation
+from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
 from backend.utils.jwt_tokens import generate_new_tokens, generate_new_tokens_from_user, verify_token
 from ..models import RefreshToken, User
-from apps.game.models import Statistics
 from backend.utils.conf_reg_utils import send_conf_reg
+from rest_framework.validators import UniqueValidator
+from django.core.validators import RegexValidator, EmailValidator
+from backend.utils.mixins.custom_error_messages import FtErrorMessagesMixin
+from backend.utils import authentication
 
 
-class RegisterSerializer(serializers.ModelSerializer):
+class RegisterSerializer(FtErrorMessagesMixin, serializers.ModelSerializer):
     repeat_password = serializers.CharField(max_length=255, write_only=True)
     password = serializers.CharField(max_length=255, write_only=True)
 
@@ -24,6 +27,16 @@ class RegisterSerializer(serializers.ModelSerializer):
             "banner",
             "repeat_password",
         )
+        ft_error_messages = {
+            'username': {
+                UniqueValidator: 'ERROR.USERNAME.ALREADY_EXISTS',
+                RegexValidator: 'ERROR.USERNAME.INVALID',
+            },
+            'email': {
+                UniqueValidator: 'ERROR.EMAIL.ALREADY_EXISTS',
+                EmailValidator: 'ERROR.EMAIL.INVALID',
+            },
+        }
 
     def create(self, validated_data):
         validated_data.pop("repeat_password", None)
@@ -39,12 +52,14 @@ class RegisterSerializer(serializers.ModelSerializer):
                 "email": self.initial_data.get("email"),
             }
         )
-        password_validation.validate_password(value, user)
+        authentication.validate_password(value, user)
         return value
 
     def validate(self, data):
         if data["password"] != data["repeat_password"]:
-            raise serializers.ValidationError("Passwords do not match")
+            raise serializers.ValidationError({
+                "repeat_password": ["ERROR.PASSWORD.DONT_MATCH"]
+            })
         return data
 
 
@@ -137,7 +152,7 @@ class LoginSerializer(serializers.Serializer):
     def validate(self, data):
         user = authenticate(username=data["username"], password=data["password"])
         if user is None:
-            raise serializers.ValidationError("Invalid username/password.")
+            raise serializers.ValidationError({"error": "ERROR.USER.INVALID_LOGIN"})
         self.user = user
         return user
 
@@ -179,7 +194,7 @@ class LogoutSerializer(serializers.Serializer):
             refresh_token = RefreshToken.objects.get(token=token)
             data["user"] = refresh_token.user
         except RefreshToken.DoesNotExist as e:
-            raise serializers.ValidationError("Invalid token") from e
+            raise serializers.ValidationError({"error": "ERROR.INVALID_TOKEN"}) from e
         return data
 
 
@@ -191,13 +206,15 @@ class ChangePasswordSerializer(serializers.Serializer):
     def validate(self, data):
         payload = verify_token(data["change_password_token"])
         if not payload.get("change_password"):
-            raise serializers.ValidationError("Is not change_password_token")
+            raise serializers.ValidationError({"error": "ERROR.INVALID_TOKEN"})
         new_password = data["new_password"]
         repeat_new_password = data["repeat_new_password"]
         if new_password != repeat_new_password:
-            raise serializers.ValidationError("The password doesn´t match")
+            raise serializers.ValidationError({"error": "ERROR.PASSWORD.DONT_MATCH"})
 
-        return User.objects.get(id=payload.get("user_id"))
+        user = User.objects.get(id=payload.get("user_id"))
+        authentication.validate_password(new_password, user)
+        return user
 
 
 class OAuthCodeSerializer(serializers.Serializer):
@@ -207,16 +224,20 @@ class OAuthCodeSerializer(serializers.Serializer):
 class MeNeedTokenSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
 
+
 class LeaderboardSerializer(serializers.ModelSerializer):
     punctuation = serializers.IntegerField(source='statistics.punctuation')
+
     class Meta:
         model = User
         fields = ['username', 'profile_img', 'id', 'punctuation']
+
 
 class UserLeaderboardSerializer(serializers.ModelSerializer):
     position = serializers.IntegerField(read_only=True)
     punctuation = serializers.IntegerField(source='statistics.punctuation')
     leaderboard = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = User
         fields = ['punctuation', 'position', 'leaderboard']
@@ -224,6 +245,7 @@ class UserLeaderboardSerializer(serializers.ModelSerializer):
     def get_leaderboard(self, obj):
         top_users = User.objects.with_ranking()[:10]
         return LeaderboardSerializer(top_users, many=True).data
+
 
 class OTPSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)

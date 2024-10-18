@@ -7,6 +7,7 @@ from django.db.models import Q
 from backend.utils.authentication import Authentication
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import redirect
+from django.http import Http404
 import os
 from backend.utils.jwt_tokens import verify_token
 from backend.utils.oauth_utils import get_access_token, get_user_info, get_or_create_user
@@ -17,7 +18,6 @@ from .serializers import (
     ChangePasswordSerializer,
     LoginSerializer,
     LogoutSerializer,
-    LeaderboardSerializer,
     MeNeedTokenSerializer,
     PasswordResetSerializer,
     OAuthCodeSerializer,
@@ -62,6 +62,21 @@ class UserViewSet(ModelViewSet):
         serializer.save()
         return Response(status=status.HTTP_202_ACCEPTED)
 
+    def retrieve(self, request, pk=None):
+        try:
+            user = self.get_object()
+        except Http404:
+            return Response({"error": "ERROR.USER.NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
+        
+        user_list = User.objects.with_ranking()
+
+        user_position = next((i for i, u in enumerate(user_list, 1) if u.id == user.id), None)
+        
+        serializer = self.get_serializer(user)
+        data = serializer.data
+        data['position'] = user_position
+        return Response(data, status=status.HTTP_200_OK)
+
     @action(methods=["POST"], detail=False, url_path="login", url_name="login", serializer_class=LoginSerializer)
     def login(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -80,7 +95,7 @@ class UserViewSet(ModelViewSet):
         user = serializer.validated_data
         if verify_otp_code(user, request.data["code"]):
             return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response({"error": "ERROR.OTP.CODE"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "ERROR.OTP_CODE"}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=["POST"], detail=False, url_path="me", url_name="me", serializer_class=MeNeedTokenSerializer)
     def me(self, request):
@@ -146,8 +161,6 @@ class UserViewSet(ModelViewSet):
     def leaderboard(self,request):
         user_list = User.objects.with_ranking()
         user = next((i for i in user_list if i.id == request.user.id), None)
-        if not user:
-            return Response({"error": "ERROR.USER_NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
         serializer = self.get_serializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
