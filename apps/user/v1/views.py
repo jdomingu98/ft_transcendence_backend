@@ -17,7 +17,6 @@ from ..models import RefreshToken, User
 from .serializers import (
     ChangePasswordSerializer,
     LoginSerializer,
-    LogoutSerializer,
     MeNeedTokenSerializer,
     PasswordResetSerializer,
     OAuthCodeSerializer,
@@ -35,7 +34,7 @@ from .serializers import (
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all().order_by("username")
     serializer_class = UserSerializer
-    
+
     def get_queryset(self):
         queryset = super().get_queryset()
         if self.action == "retrieve":
@@ -67,11 +66,11 @@ class UserViewSet(ModelViewSet):
             user = self.get_object()
         except Http404:
             return Response({"error": ["ERROR.USER.NOT_FOUND"]}, status=status.HTTP_404_NOT_FOUND)
-        
+
         user_list = User.objects.with_ranking()
 
         user_position = next((i for i, u in enumerate(user_list, 1) if u.id == user.id), None)
-        
+
         serializer = self.get_serializer(user)
         data = serializer.data
         data['position'] = user_position
@@ -118,18 +117,17 @@ class UserViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(methods=["POST"], detail=False, url_path="logout", url_name="logout", serializer_class=LogoutSerializer)
+    @action(methods=["POST"], detail=False, url_path="logout", url_name="logout", authentication_classes=[Authentication],
+            permission_classes=[IsAuthenticated])
     def logout(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data["user"]
+        user = request.user
         user.is_connected = False
         user.save()
-        refresh_token = RefreshToken.objects.get(token=serializer.validated_data["token"])
+        refresh_token = RefreshToken.objects.filter(user=user)
         refresh_token.delete()
         return Response(status=status.HTTP_200_OK)
 
-    @action(methods=["POST"], detail=False, url_path="change-password", url_name="change-password",serializer_class=ChangePasswordSerializer)
+    @action(methods=["POST"], detail=False, url_path="change-password", url_name="change-password", serializer_class=ChangePasswordSerializer)
     def change_password(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -155,10 +153,10 @@ class UserViewSet(ModelViewSet):
         login_serializer = LoginSerializer(user)
 
         return Response(login_serializer.data, status=status.HTTP_200_OK)
-    
+
     @action(methods=["GET"], detail=False, url_path="leaderboard", url_name="leaderboard", serializer_class=UserLeaderboardSerializer,
-        authentication_classes=[Authentication], permission_classes=[IsAuthenticated])
-    def leaderboard(self,request):
+            authentication_classes=[Authentication], permission_classes=[IsAuthenticated])
+    def leaderboard(self, request):
         user_list = User.objects.with_ranking()
         user = next((i for i in user_list if i.id == request.user.id), None)
         serializer = self.get_serializer(user)

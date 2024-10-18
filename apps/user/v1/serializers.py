@@ -185,19 +185,6 @@ class RefreshTokenSerializer(serializers.Serializer):
         }
 
 
-class LogoutSerializer(serializers.Serializer):
-    token = serializers.CharField(write_only=True)
-
-    def validate(self, data):
-        token = data["token"]
-        try:
-            refresh_token = RefreshToken.objects.get(token=token)
-            data["user"] = refresh_token.user
-        except RefreshToken.DoesNotExist as e:
-            raise serializers.ValidationError({"error": "ERROR.INVALID_TOKEN"}) from e
-        return data
-
-
 class ChangePasswordSerializer(serializers.Serializer):
     new_password = serializers.CharField(write_only=True)
     repeat_new_password = serializers.CharField(write_only=True)
