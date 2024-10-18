@@ -61,7 +61,7 @@ class UserViewSet(ModelViewSet):
         try:
             user = self.get_object()
         except Http404:
-            return Response({"error": "ERROR.USER_NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "ERROR.USER.NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
         
         user_list = User.objects.with_ranking()
 
