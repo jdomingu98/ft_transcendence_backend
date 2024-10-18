@@ -7,6 +7,7 @@ from django.db.models import Q
 from backend.utils.authentication import Authentication
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import redirect
+from django.http import Http404
 import os
 from backend.utils.jwt_tokens import verify_token
 from backend.utils.oauth_utils import get_access_token, get_user_info, get_or_create_user
@@ -54,6 +55,21 @@ class UserViewSet(ModelViewSet):
         elif self.action == "destroy":
             serializer = UserSerializer
         return serializer
+
+    def retrieve(self, request, pk=None):
+        try:
+            user = self.get_object()
+        except Http404:
+            return Response({"error": "ERROR.USER.NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
+        
+        user_list = User.objects.with_ranking()
+
+        user_position = next((i for i, u in enumerate(user_list, 1) if u.id == user.id), None)
+        
+        serializer = self.get_serializer(user)
+        data = serializer.data
+        data['position'] = user_position
+        return Response(data, status=status.HTTP_200_OK)
 
     @action(methods=["POST"], detail=False, url_path="login", url_name="login", serializer_class=LoginSerializer)
     def login(self, request):
