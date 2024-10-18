@@ -66,7 +66,7 @@ class UserViewSet(ModelViewSet):
         try:
             user = self.get_object()
         except Http404:
-            return Response({"error": "ERROR.USER.NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": ["ERROR.USER.NOT_FOUND"]}, status=status.HTTP_404_NOT_FOUND)
         
         user_list = User.objects.with_ranking()
 
@@ -83,7 +83,7 @@ class UserViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         user: User = serializer.user
         if not user.is_verified:
-            return Response({"error": "ERROR.USER.NOT_VERIFIED"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": ["ERROR.USER.NOT_VERIFIED"]}, status=status.HTTP_400_BAD_REQUEST)
         if user.two_factor_enabled:
             send_otp_code(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -95,7 +95,7 @@ class UserViewSet(ModelViewSet):
         user = serializer.validated_data
         if verify_otp_code(user, request.data["code"]):
             return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response({"error": "ERROR.OTP_CODE"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": ["ERROR.OTP_CODE"]}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=["POST"], detail=False, url_path="me", url_name="me", serializer_class=MeNeedTokenSerializer)
     def me(self, request):
@@ -145,13 +145,13 @@ class UserViewSet(ModelViewSet):
         code = serializer.validated_data["code"]
         access_token = get_access_token(code)
         if not access_token:
-            return Response({"error": "ERROR.OAUTH.TOKEN"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": ["ERROR.OAUTH.TOKEN"]}, status=status.HTTP_400_BAD_REQUEST)
         user_info = get_user_info(access_token)
         if not user_info:
-            return Response({"error": "ERROR.OAUTH.USER_INFO"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": ["ERROR.OAUTH.USER_INFO"]}, status=status.HTTP_400_BAD_REQUEST)
         user = get_or_create_user(user_info)
         if not user:
-            return Response({"error": "ERROR.OAUTH.EMAIL_EXISTS"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": ["ERROR.OAUTH.EMAIL_EXISTS"]}, status=status.HTTP_400_BAD_REQUEST)
         login_serializer = LoginSerializer(user)
 
         return Response(login_serializer.data, status=status.HTTP_200_OK)
