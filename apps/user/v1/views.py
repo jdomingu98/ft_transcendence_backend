@@ -28,7 +28,7 @@ from .serializers import (
     UserSerializer,
     MeNeedTokenSerializer, 
     FriendSerializer,
-    FriendsListSerializer
+    FriendsListSerializer,
     UserLeaderboardSerializer,
     RefreshTokenSerializer,
     RegisterSerializer,
@@ -173,7 +173,7 @@ class UserViewSet(ModelViewSet):
         user.save()
         return redirect(os.getenv("FRONTEND_URL"))
       
-      class FriendsViewSet(ModelViewSet):
+class FriendsViewSet(ModelViewSet):
     serializer_class = FriendSerializer
     queryset = FriendShip.objects.all()
     
