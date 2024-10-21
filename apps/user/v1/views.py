@@ -226,10 +226,10 @@ class FriendsViewSet(ModelViewSet):
             Q(user_id=friend_id, friend_id=user_id) 
         )
         if not friendShip:
-            raise ValidationError({"error": "ERROR.FRIEND.YOU_ARE_NOT_MY_FRIEND:("})
+            raise ValidationError({"error": "ERROR.FRIENDS.YOU_ARE_NOT_MY_FRIEND:("})
 
         if friendShip.accepted:
-            return Response({"error": 'ERROR.FRIEND.WAS_ACCEPTED'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": 'ERROR.FRIENDS.WAS_ACCEPTED'}, status=status.HTTP_400_BAD_REQUEST)
         
         friendShip.accepted = True
         friendShip.save()
@@ -247,6 +247,6 @@ class FriendsViewSet(ModelViewSet):
         ).first()
 
         if not friendship:
-            return Response({"error": "ERROR.FRIEND.FRIENDSHIP_NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "ERROR.FRIENDS.FRIENDSHIP_NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
         friendship.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
