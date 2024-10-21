@@ -184,7 +184,5 @@ class MeNeedTokenSerializer(serializers.Serializer):
 class FriendsListSerializer(serializers.Serializer):
     friends_ids = serializers.ListField(child=serializers.IntegerField())
  
-
 class FriendSerializer(serializers.Serializer):
     friend_id = serializers.IntegerField()
-
