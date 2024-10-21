@@ -3,7 +3,7 @@ from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
 from backend.utils.jwt_tokens import generate_new_tokens, generate_new_tokens_from_user, verify_token
-from ..models import RefreshToken, User
+from ..models import RefreshToken, User, FriendShip
 from backend.utils.conf_reg_utils import send_conf_reg
 from rest_framework.validators import UniqueValidator
 from django.core.validators import RegexValidator, EmailValidator
@@ -211,6 +211,11 @@ class OAuthCodeSerializer(serializers.Serializer):
 class MeNeedTokenSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
 
+class FriendsListSerializer(serializers.Serializer):
+    friends_ids = serializers.ListField(child=serializers.IntegerField())
+ 
+class FriendSerializer(serializers.Serializer):
+    friend_id = serializers.IntegerField()
 
 class LeaderboardSerializer(serializers.ModelSerializer):
     punctuation = serializers.IntegerField(source='statistics.punctuation')
