@@ -3,7 +3,7 @@ from datetime import timezone
 
 import jwt
 from django.db import transaction
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, AuthenticationFailed
 
 from apps.user.models import RefreshToken
 from .read_keys import read_private_key, read_public_key
@@ -53,9 +53,9 @@ def verify_token(token):
     try:
         return jwt.decode(token, public_key, algorithms=["RS256"])
     except jwt.ExpiredSignatureError as e:
-        raise ValidationError("Expired token") from e
+        raise AuthenticationFailed({"error": ["ERROR.EXPIRED_TOKEN"]}) from e
     except jwt.InvalidTokenError as e:
-        raise ValidationError("Invalid token") from e
+        raise AuthenticationFailed({"error": ["ERROR.INVALID_TOKEN"]}) from e
 
 
 def generate_new_tokens_from_user(user_id, user_email):
@@ -81,4 +81,4 @@ def generate_new_tokens(refresh_token):
         access_token, new_refresh_token = generate_new_tokens_from_user(user_id, user_email)
         store_token_at_bd(user_id, new_refresh_token)
         return access_token, new_refresh_token
-    raise ValidationError("Invalid token")
+    raise ValidationError({"error": ["ERROR.INVALID_TOKEN"]})
