@@ -216,6 +216,10 @@ class FriendsListSerializer(serializers.Serializer):
  
 class FriendSerializer(serializers.Serializer):
     friend_id = serializers.IntegerField()
+    
+    def validate_friend_id(self, value):
+        get_object_or_404(User, id=value)
+        return value
 
 class LeaderboardSerializer(serializers.ModelSerializer):
     punctuation = serializers.IntegerField(source='statistics.punctuation')
