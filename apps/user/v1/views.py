@@ -226,7 +226,7 @@ class FriendsViewSet(ModelViewSet):
             Q(user_id=friend_id, friend_id=user_id)
         ).first()
         if not friendShip:
-            raise ValidationError({"error": "ERROR.FRIENDS.FRIENDSHIP_NOT_FOUND"})
+            return Response({"error": "ERROR.FRIENDS.FRIENDSHIP_NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
 
         if friendShip.accepted:
             raise ValidationError({"error": 'ERROR.FRIENDS.WAS_ACCEPTED'})
