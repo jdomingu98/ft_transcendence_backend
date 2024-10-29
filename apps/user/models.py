@@ -52,6 +52,7 @@ class User(AbstractBaseUser):
         if not hasattr(self, 'statistics'):
             Statistics.objects.create(user=self)
 
+
 class OTPCode(models.Model):
     code = models.CharField(max_length=6, unique=True)
     expiration_time = models.DateTimeField()
