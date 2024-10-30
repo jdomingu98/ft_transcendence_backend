@@ -3,7 +3,7 @@ from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
 from backend.utils.jwt_tokens import generate_new_tokens, generate_new_tokens_from_user, verify_token
-from ..models import RefreshToken, User
+from ..models import RefreshToken, User, LocalMatch
 from backend.utils.conf_reg_utils import send_conf_reg
 from rest_framework.validators import UniqueValidator
 from django.core.validators import RegexValidator, EmailValidator
@@ -250,3 +250,17 @@ class OTPSerializer(serializers.Serializer):
             "refresh_token": refresh_token,
             "two_factor_enabled": instance.two_factor_enabled
         }
+
+
+class LocalMatchSerializer(serializers.ModelSerializer):
+    against = serializers.CharField(source='user_b', read_only=True)
+
+    class Meta:
+        model = LocalMatch
+        fields = (
+            'id',
+            'time_played',
+            'against',
+            'num_goals_scored',
+            'num_goals_against',
+        )
