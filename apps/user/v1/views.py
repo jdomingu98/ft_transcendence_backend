@@ -13,6 +13,7 @@ from backend.utils.jwt_tokens import verify_token
 from backend.utils.oauth_utils import get_access_token, get_user_info, get_or_create_user
 from backend.utils.pass_reset_utils import send_reset_email
 from backend.utils.otp_utils import send_otp_code, verify_otp_code
+from backend.utils.match import get_user_matches
 from ..models import RefreshToken, User
 from .serializers import (
     ChangePasswordSerializer,
@@ -28,6 +29,7 @@ from .serializers import (
     UserLeaderboardSerializer,
     RefreshTokenSerializer,
     RegisterSerializer,
+    LocalMatchSerializer,
 )
 
 
@@ -168,3 +170,8 @@ class UserViewSet(ModelViewSet):
         user.is_verified = True
         user.save()
         return redirect(os.getenv("FRONTEND_URL"))
+
+    @action(methods=["GET"], detail=True, url_path="match", url_name="match")
+    def match(self, request, pk=None):
+        return get_user_matches(pk, request)
+  
