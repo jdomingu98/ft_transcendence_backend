@@ -23,7 +23,10 @@ def calculate_win_rate(user_statistics, match):
     return win_rate
     
 def calculate_punctuation(user_statistics, match):
-    user_statistics.punctuation += 10 if match.num_goals_scored > match.num_goals_against else -5
+    if match.num_goals_scored > match.num_goals_against:
+        user_statistics.punctuation += 10
+    elif match.num_goals_scored < match.num_goals_against:
+        user_statistics.punctuation -= 5
     user_statistics.punctuation = max(user_statistics.punctuation, 0)
 
 
@@ -34,7 +37,7 @@ def update_statistics(user, match):
     statistics.num_matches += 1
     statistics.max_streak = calculate_max_streak(statistics, match)
 
-    statistics.punctuation = calculate_punctuation(statistics, match)
+    calculate_punctuation(statistics, match)
     statistics.win_rate = calculate_win_rate(statistics, match)
 
     statistics.num_goals_scored += match.num_goals_scored

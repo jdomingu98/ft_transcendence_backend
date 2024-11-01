@@ -11,4 +11,3 @@ from .utils.update_statistics import update_statistics
 class GameViewSet(ModelViewSet):
     queryset = LocalMatch.objects.all()
     serializer_class = LocalMatchSerializer
-    

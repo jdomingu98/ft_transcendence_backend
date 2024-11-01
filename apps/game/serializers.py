@@ -30,41 +30,45 @@ class LocalMatchSerializer(serializers.ModelSerializer):
         )
     
     def validate(self, data):
-        errors = self.errors
-        if self.is_tourney(data):
-            print("ES UN TORNEO")
-            if not data.get("num_order"):
-                errors["num_order"] = ["REQUIRED"]
-            if not data.get("num_round"):
-                errors["num_round"] = ["REQUIRED"]
-        else:
-            print("NO ES UN TORNETO")
-            if not data.get("user"):
-                print("NO AHI USUARIO")
-                errors["user"] = ["REQUIRED"]
+        optional_errors = {}
 
-        if len(errors) > 0:
-            raise ValidationError(errors)
+        if self.is_tourney(data):
+            if not data.get("num_order"):
+                optional_errors["num_order"] = ["This field is required."]
+            if not data.get("num_round"):
+                optional_errors["num_round"] = ["This field is required."]
+        else:
+            if not data.get("user"):
+                optional_errors["user"] = ["This field is required."]
+
+        if len(optional_errors) > 0:
+            raise ValidationError(optional_errors)
+        return data
 
     def create(self, validated_data):
         local_match = super().create(validated_data)
         if not self.is_tourney(validated_data):
             user = validated_data.get("user")
             update_statistics(user, local_match)
-            return local_match
-        else:
-            pass
+        return local_match
 
     def is_tourney(self, data):
-        print("TIPO:", data.get("tournament"))
         return data.get("tournament") is not None
 
-    
     def is_valid(self, raise_exception=False):
+        errors = {}
+
         try:
             super().is_valid(raise_exception=True)
-        except:
-            print("INITAL DATA:", self.initial_data)
+        except ValidationError as e:
+            errors.update(e.detail)
+
+        try:
             self.validate(self.initial_data)
+        except ValidationError as e:
+            errors.update(e.detail)
+
+        if len(errors) > 0:
+            raise ValidationError(errors)
+
         return True
-        
