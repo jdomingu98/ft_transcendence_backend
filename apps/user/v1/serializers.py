@@ -3,7 +3,8 @@ from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
 from backend.utils.jwt_tokens import generate_new_tokens, generate_new_tokens_from_user, verify_token
-from ..models import RefreshToken, User, FriendShip
+from ..models import User
+from backend.utils.leaderboard import get_leaderboard_cached
 from backend.utils.conf_reg_utils import send_conf_reg
 from rest_framework.validators import UniqueValidator
 from django.core.validators import RegexValidator, EmailValidator
@@ -48,8 +49,8 @@ class RegisterSerializer(FtErrorMessagesMixin, serializers.ModelSerializer):
     def validate_password(self, value):
         user = User(
             **{
-                "username": self.initial_data.get("username"),
-                "email": self.initial_data.get("email"),
+                "username": self.initial_data.get("username"),  # type: ignore
+                "email": self.initial_data.get("email"),  # type: ignore
             }
         )
         authentication.validate_password(value, user)
@@ -211,15 +212,18 @@ class OAuthCodeSerializer(serializers.Serializer):
 class MeNeedTokenSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
 
+
 class FriendsListSerializer(serializers.Serializer):
     friends_ids = serializers.ListField(child=serializers.IntegerField())
- 
+
+
 class FriendSerializer(serializers.Serializer):
     friend_id = serializers.IntegerField()
-    
+
     def validate_friend_id(self, value):
         get_object_or_404(User, id=value)
         return value
+
 
 class LeaderboardSerializer(serializers.ModelSerializer):
     punctuation = serializers.IntegerField(source='statistics.punctuation')
@@ -239,7 +243,7 @@ class UserLeaderboardSerializer(serializers.ModelSerializer):
         fields = ['punctuation', 'position', 'leaderboard']
 
     def get_leaderboard(self, obj):
-        top_users = User.objects.with_ranking()[:10]
+        top_users = get_leaderboard_cached()
         return LeaderboardSerializer(top_users, many=True).data
 
 
