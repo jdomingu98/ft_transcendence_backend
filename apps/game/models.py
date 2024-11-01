@@ -30,9 +30,9 @@ class LocalMatch(models.Model):
 
     num_round = models.IntegerField(default=0)
 
-    user_a = models.CharField(null=True)
+    user_a = models.CharField(max_length=50)
 
-    user_b = models.CharField(null=True)
+    user_b = models.CharField(max_length=50)
 
     user = models.ForeignKey("user.User", on_delete=models.CASCADE, null=True)
 
