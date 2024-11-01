@@ -20,9 +20,6 @@ WORKDIR /app
 # Copy the entire project into the container
 COPY . /app/
 
-# Generate private and public keys
-RUN yes | ssh-keygen -t rsa -b 2048 -m PEM -f jwtRS256.key -N "$PASSPHRASE"
-
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 

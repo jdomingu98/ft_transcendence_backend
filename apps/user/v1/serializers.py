@@ -3,7 +3,8 @@ from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
 from backend.utils.jwt_tokens import generate_new_tokens, generate_new_tokens_from_user, verify_token
-from ..models import RefreshToken, User
+from ..models import User
+from backend.utils.leaderboard import get_leaderboard_cached
 from backend.utils.conf_reg_utils import send_conf_reg
 from rest_framework.validators import UniqueValidator
 from django.core.validators import RegexValidator, EmailValidator
@@ -230,7 +231,7 @@ class UserLeaderboardSerializer(serializers.ModelSerializer):
         fields = ['punctuation', 'position', 'leaderboard']
 
     def get_leaderboard(self, obj):
-        top_users = User.objects.with_ranking()[:10]
+        top_users = get_leaderboard_cached()
         return LeaderboardSerializer(top_users, many=True).data
 
 
