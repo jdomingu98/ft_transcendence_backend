@@ -1,19 +1,22 @@
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
+from django.db import transaction
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from django.db.models import Q
-from backend.utils.authentication import Authentication
-from rest_framework.permissions import IsAuthenticated
-from django.shortcuts import redirect
-from django.http import Http404
-import os
 from backend.utils.jwt_tokens import verify_token
 from backend.utils.oauth_utils import get_access_token, get_user_info, get_or_create_user
 from backend.utils.pass_reset_utils import send_reset_email
+from ..models import RefreshToken, User, FriendShip
+from backend.utils.authentication import Authentication
+from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import redirect
+from apps.user.v1.filters import UserFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from django.http import Http404
+import os
 from backend.utils.otp_utils import send_otp_code, verify_otp_code
-from ..models import RefreshToken, User
 from .serializers import (
     ChangePasswordSerializer,
     LoginSerializer,
@@ -25,6 +28,8 @@ from .serializers import (
     UserUpdateSerializer,
     UserListSerializer,
     UserSerializer,
+    FriendSerializer,
+    AcceptFriendSerializer,
     UserLeaderboardSerializer,
     RefreshTokenSerializer,
     RegisterSerializer,
@@ -34,6 +39,8 @@ from .serializers import (
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all().order_by("username")
     serializer_class = UserSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = UserFilter
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -168,3 +175,23 @@ class UserViewSet(ModelViewSet):
         user.is_verified = True
         user.save()
         return redirect(os.getenv("FRONTEND_URL"))
+
+
+class FriendsViewSet(ModelViewSet):
+    serializer_class = FriendSerializer
+    authentication_classes = [Authentication]
+    permission_classes = [IsAuthenticated]
+    queryset = FriendShip.objects.all()
+    http_method_names = ["post", "delete"]
+
+    @action(methods=["POST"], detail=False, url_path="accept", url_name="accept", serializer_class=AcceptFriendSerializer)
+    def accept(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        friendship: FriendShip = serializer.validated_data
+
+        friendship.accepted = True
+        with transaction.atomic():
+            friendship.save()
+            FriendShip.objects.create(user_id=request.user.id, friend_id=friendship.user_id, accepted=True)
+        return Response(status=status.HTTP_204_NO_CONTENT)
