@@ -1,7 +1,8 @@
 from rest_framework import serializers
-from .models import LocalMatch
-from .utils.update_statistics import update_statistics
+from ..models import LocalMatch
+from ..utils.update_statistics import update_statistics
 from rest_framework.exceptions import ValidationError
+
 
 class LocalMatchSerializer(serializers.ModelSerializer):
     user_a = serializers.CharField()
@@ -29,18 +30,18 @@ class LocalMatchSerializer(serializers.ModelSerializer):
             "num_order",
             "num_round",
         )
-    
+
     def validate(self, data):
         optional_errors = {}
 
-        if self.is_tourney(data):
+        if self.is_tournament(data):
             if not data.get("num_order"):
-                optional_errors["num_order"] = ["This field is required."]
+                optional_errors["num_order"] = ["ERROR.ORDER.REQUIRED"]
             if not data.get("num_round"):
-                optional_errors["num_round"] = ["This field is required."]
+                optional_errors["num_round"] = ["ERROR.ROUND.REQUIRED"]
         else:
             if not data.get("user"):
-                optional_errors["user"] = ["This field is required."]
+                optional_errors["user"] = ["ERROR.USER.REQUIRED"]
 
         if len(optional_errors) > 0:
             raise ValidationError(optional_errors)
@@ -48,12 +49,12 @@ class LocalMatchSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         local_match = super().create(validated_data)
-        if not self.is_tourney(validated_data):
+        if not self.is_tournament(validated_data):
             user = validated_data.get("user")
             update_statistics(user, local_match)
         return local_match
 
-    def is_tourney(self, data):
+    def is_tournament(self, data):
         return data.get("tournament") is not None
 
     def is_valid(self, raise_exception=False):
