@@ -3,7 +3,8 @@ from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
 from backend.utils.jwt_tokens import generate_new_tokens, generate_new_tokens_from_user, verify_token
-from ..models import RefreshToken, User, LocalMatch
+from ..models import RefreshToken, User
+from apps.game.models import LocalMatch
 from backend.utils.conf_reg_utils import send_conf_reg
 from rest_framework.validators import UniqueValidator
 from django.core.validators import RegexValidator, EmailValidator
@@ -253,6 +254,8 @@ class OTPSerializer(serializers.Serializer):
 
 
 class LocalMatchSerializer(serializers.ModelSerializer):
+    result = serializers.SerializerMethodField()
+    earned = serializers.SerializerMethodField()
     against = serializers.CharField(source='user_b', read_only=True)
 
     class Meta:
@@ -261,6 +264,22 @@ class LocalMatchSerializer(serializers.ModelSerializer):
             'id',
             'time_played',
             'against',
-            'num_goals_scored',
-            'num_goals_against',
+            'result',
+            'earned',
         )
+
+    def get_result(self, obj):
+        if obj.num_goals_scored > obj.num_goals_against:
+            return 'victory'
+        elif obj.num_goals_scored < obj.num_goals_against:
+            return 'defeat'
+        else:
+            return 'draw'
+
+    def get_earned(self, obj):
+        if obj.num_goals_scored > obj.num_goals_against:
+            return 10
+        elif obj.num_goals_scored < obj.num_goals_against:
+            return -5
+        else:
+            return 0
