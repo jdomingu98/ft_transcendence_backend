@@ -9,3 +9,4 @@ pre-commit==3.8.0
 pynliner==0.8.0
 requests==2.32.3
 django-redis==5.4.0
+django-filter==24.3

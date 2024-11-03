@@ -1,20 +1,22 @@
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
+from django.db import transaction
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from django.db.models import Q
+from backend.utils.oauth_utils import get_access_token, get_user_info, get_or_create_user
+from backend.utils.pass_reset_utils import send_reset_email
+from ..models import RefreshToken, User, FriendShip
 from backend.utils.authentication import Authentication
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import redirect
+from apps.user.v1.filters import UserFilter
+from django_filters.rest_framework import DjangoFilterBackend
 from django.http import Http404
 import os
-from backend.utils.jwt_tokens import verify_token
-from backend.utils.oauth_utils import get_access_token, get_user_info, get_or_create_user
-from backend.utils.pass_reset_utils import send_reset_email
+from .permissions import UserPermissions
 from backend.utils.otp_utils import send_otp_code, verify_otp_code
-from backend.utils.match import get_user_matches
-from ..models import RefreshToken, User
 from .serializers import (
     ChangePasswordSerializer,
     LoginSerializer,
@@ -26,6 +28,8 @@ from .serializers import (
     UserUpdateSerializer,
     UserListSerializer,
     UserSerializer,
+    FriendSerializer,
+    AcceptFriendSerializer,
     UserLeaderboardSerializer,
     RefreshTokenSerializer,
     RegisterSerializer,
@@ -36,6 +40,10 @@ from .serializers import (
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all().order_by("username")
     serializer_class = UserSerializer
+    filter_backends = [DjangoFilterBackend]
+    authentication_classes = [Authentication]
+    permission_classes = [UserPermissions]
+    filterset_class = UserFilter
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -64,6 +72,7 @@ class UserViewSet(ModelViewSet):
         return Response(status=status.HTTP_202_ACCEPTED)
 
     def retrieve(self, request, pk=None):
+        """ TODO: Can Anon user see this? """
         try:
             user = self.get_object()
         except Http404:
@@ -100,9 +109,8 @@ class UserViewSet(ModelViewSet):
 
     @action(methods=["POST"], detail=False, url_path="me", url_name="me", serializer_class=MeNeedTokenSerializer)
     def me(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        return Response(verify_token(request.data["token"]), status=status.HTTP_200_OK)
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(methods=["POST"], detail=False, url_path="pass-reset", url_name="pass-reset", serializer_class=PasswordResetSerializer)
     def password_reset(self, request):
@@ -119,14 +127,12 @@ class UserViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(methods=["POST"], detail=False, url_path="logout", url_name="logout", authentication_classes=[Authentication],
-            permission_classes=[IsAuthenticated])
+    @action(methods=["POST"], detail=False, url_path="logout", url_name="logout")
     def logout(self, request):
         user = request.user
-        user.is_connected = False
-        user.save()
-        refresh_token = RefreshToken.objects.filter(user=user)
-        refresh_token.delete()
+        request.user.is_connected = False
+        request.user.save()
+        RefreshToken.objects.filter(user=user).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=["POST"], detail=False, url_path="change-password", url_name="change-password", serializer_class=ChangePasswordSerializer)
@@ -156,8 +162,7 @@ class UserViewSet(ModelViewSet):
 
         return Response(login_serializer.data, status=status.HTTP_200_OK)
 
-    @action(methods=["GET"], detail=False, url_path="leaderboard", url_name="leaderboard", serializer_class=UserLeaderboardSerializer,
-            authentication_classes=[Authentication], permission_classes=[IsAuthenticated])
+    @action(methods=["GET"], detail=False, url_path="leaderboard", url_name="leaderboard", serializer_class=UserLeaderboardSerializer)
     def leaderboard(self, request):
         user_list = User.objects.with_ranking()
         user = next((i for i in user_list if i.id == request.user.id), None)
@@ -170,8 +175,3 @@ class UserViewSet(ModelViewSet):
         user.is_verified = True
         user.save()
         return redirect(os.getenv("FRONTEND_URL"))
-
-    @action(methods=["GET"], detail=True, url_path="match", url_name="match")
-    def match(self, request, pk=None):
-        return get_user_matches(pk, request)
-  
