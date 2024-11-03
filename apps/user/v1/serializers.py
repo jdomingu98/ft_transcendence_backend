@@ -195,15 +195,19 @@ class ChangePasswordSerializer(serializers.Serializer):
     change_password_token = serializers.CharField(write_only=True)
 
     def validate(self, data):
-        payload = verify_token(data["change_password_token"])
-        if not payload.get("change_password"):
-            raise serializers.ValidationError({"error": "ERROR.INVALID_TOKEN"})
+        if self.context["request"].user.is_authenticated:
+            user_id = self.context["request"].user.id
+        else:
+            payload = verify_token(data["change_password_token"])
+            if not payload.get("change_password"):
+                raise serializers.ValidationError({"error": "ERROR.INVALID_TOKEN"})
+            user_id = payload.get("user_id")
         new_password = data["new_password"]
         repeat_new_password = data["repeat_new_password"]
         if new_password != repeat_new_password:
             raise serializers.ValidationError({"error": "ERROR.PASSWORD.DONT_MATCH"})
 
-        user = User.objects.get(id=payload.get("user_id"))
+        user = User.objects.get(id=user_id)
         authentication.validate_password(new_password, user)
         return user
 
