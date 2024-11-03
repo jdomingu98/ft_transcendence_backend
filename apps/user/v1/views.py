@@ -1,17 +1,19 @@
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
+from django.db import transaction
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
-from django.db.models import Q,F
+from django.db.models import Q
 from backend.utils.jwt_tokens import verify_token
 from backend.utils.oauth_utils import get_access_token, get_user_info, get_or_create_user
 from backend.utils.pass_reset_utils import send_reset_email
-from rest_framework.exceptions import ValidationError
 from ..models import RefreshToken, User, FriendShip
 from backend.utils.authentication import Authentication
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import redirect
+from apps.user.v1.filters import UserFilter
+from django_filters.rest_framework import DjangoFilterBackend
 from django.http import Http404
 import os
 from backend.utils.otp_utils import send_otp_code, verify_otp_code
@@ -26,9 +28,8 @@ from .serializers import (
     UserUpdateSerializer,
     UserListSerializer,
     UserSerializer,
-    MeNeedTokenSerializer, 
     FriendSerializer,
-    FriendsListSerializer,
+    AcceptFriendSerializer,
     UserLeaderboardSerializer,
     RefreshTokenSerializer,
     RegisterSerializer,
@@ -38,6 +39,8 @@ from .serializers import (
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all().order_by("username")
     serializer_class = UserSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = UserFilter
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -156,7 +159,7 @@ class UserViewSet(ModelViewSet):
             return Response({"error": ["ERROR.OAUTH.EMAIL_EXISTS"]}, status=status.HTTP_400_BAD_REQUEST)
         login_serializer = LoginSerializer(user)
 
-        return Response(login_serializer.data,status=status.HTTP_200_OK)
+        return Response(login_serializer.data, status=status.HTTP_200_OK)
 
     @action(methods=["GET"], detail=False, url_path="leaderboard", url_name="leaderboard", serializer_class=UserLeaderboardSerializer,
             authentication_classes=[Authentication], permission_classes=[IsAuthenticated])
@@ -165,90 +168,30 @@ class UserViewSet(ModelViewSet):
         user = next((i for i in user_list if i.id == request.user.id), None)
         serializer = self.get_serializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
     @action(methods=["POST"], detail=True, url_path="verify_account", url_name="verify_account")
     def verify_account(self, request, pk=None):
         user = get_object_or_404(User, pk=pk)
         user.is_verified = True
         user.save()
         return redirect(os.getenv("FRONTEND_URL"))
-      
+
+
 class FriendsViewSet(ModelViewSet):
     serializer_class = FriendSerializer
+    authentication_classes = [Authentication]
+    permission_classes = [IsAuthenticated]
     queryset = FriendShip.objects.all()
-    
-    def list(self, request, *args, **kwargs):
-        user = get_object_or_404(User, pk=self.kwargs.get("user_pk"))
-        friendships = FriendShip.objects.filter(
-            Q(user_id=user.id) | Q(friend_id=user.id),
-            accepted=True
-        )
-        friend_ids = {
-            i.friend_id if i.user_id == user.id else i.user_id
-            for i in friendships
-        }
-        data = {'friends_ids': friend_ids}
-        serializer = FriendsListSerializer(data=data)
-        serializer.is_valid(raise_exception=True)
+    http_method_names = ["post", "delete"]
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
-    def create(self, request, *args, **kwargs):
-        user = get_object_or_404(User, pk=self.kwargs.get("user_pk"))
-        user_id = user.id
-
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        friend_id = serializer.validated_data.get("friend_id")
-
-        if user_id == friend_id:
-            raise ValidationError({"error": "ERROR.FRIENDS.YOURSELF"})
-
-        if FriendShip.objects.filter(
-                Q(user_id=user_id, friend_id=friend_id) | Q(user_id=friend_id, friend_id=user_id)
-            ).exists():
-            raise ValidationError({"error": "ERROR.FRIENDS.FRIENDSHIP_EXISTS"})
-
-        FriendShip.objects.create(user_id=user_id, friend_id=friend_id, accepted=False)
-        return Response(status=status.HTTP_201_CREATED)
-    
-    @action(methods=["POST"], detail=False, url_path="accept", url_name="accept")
+    @action(methods=["POST"], detail=False, url_path="accept", url_name="accept", serializer_class=AcceptFriendSerializer)
     def accept(self, request, *args, **kwargs):
-        user = get_object_or_404(User, pk=self.kwargs.get("user_pk"))
-        user_id = user.id
-
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        friendship: FriendShip = serializer.validated_data
 
-        friend_id = serializer.validated_data.get("friend_id")
-        friendShip = FriendShip.objects.filter(
-            Q(user_id=friend_id, friend_id=user_id)
-        ).first()
-        if not friendShip:
-            return Response({"error": "ERROR.FRIENDS.FRIENDSHIP_NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
-
-        if friendShip.accepted:
-            raise ValidationError({"error": 'ERROR.FRIENDS.WAS_ACCEPTED'})
-        
-        friendShip.accepted = True
-        friendShip.save()
-        return Response(status=status.HTTP_200_OK)
-    
-    def delete(self, request, *args, **kwargs):
-        user = get_object_or_404(User, pk=self.kwargs.get("user_pk"))
-        user_id = user.id
-
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        friend_id = serializer.validated_data.get("friend_id")
-
-        friendship = FriendShip.objects.filter(
-            Q(user_id=user_id, friend_id=friend_id) | 
-            Q(user_id=friend_id, friend_id=user_id)
-        ).first()
-        if not friendship:
-            return Response({"error": "ERROR.FRIENDS.FRIENDSHIP_NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
-        friendship.delete()
+        friendship.accepted = True
+        with transaction.atomic():
+            friendship.save()
+            FriendShip.objects.create(user_id=request.user.id, friend_id=friendship.user_id, accepted=True)
         return Response(status=status.HTTP_204_NO_CONTENT)

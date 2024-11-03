@@ -2,8 +2,9 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 from backend.utils.jwt_tokens import generate_new_tokens, generate_new_tokens_from_user, verify_token
-from ..models import User
+from ..models import User, FriendShip
 from backend.utils.leaderboard import get_leaderboard_cached
 from backend.utils.conf_reg_utils import send_conf_reg
 from rest_framework.validators import UniqueValidator
@@ -213,16 +214,54 @@ class MeNeedTokenSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
 
 
-class FriendsListSerializer(serializers.Serializer):
-    friends_ids = serializers.ListField(child=serializers.IntegerField())
+class FriendSerializer(serializers.ModelSerializer):
+    friend_id = serializers.IntegerField(source='friend.id', write_only=True)
 
-
-class FriendSerializer(serializers.Serializer):
-    friend_id = serializers.IntegerField()
+    class Meta:
+        model = FriendShip
+        fields = ['friend_id']
 
     def validate_friend_id(self, value):
+        if self.context["request"].user.id == value:
+            raise serializers.ValidationError({"error": "ERROR.FRIENDS.YOURSELF"})
         get_object_or_404(User, id=value)
         return value
+
+    def validate(self, attrs):
+        if FriendShip.objects.filter(user=self.context["request"].user, friend_id=attrs["friend"]["id"]).exists():
+            raise serializers.ValidationError({"error": "ERROR.FRIENDS.FRIENDSHIP_EXISTS"})
+        return {"friend_id": attrs["friend"]["id"]}
+
+    def create(self, validated_data):
+        friend = User.objects.get(id=validated_data["friend_id"])
+        user = self.context["request"].user
+        FriendShip.objects.get_or_create(user=user, friend=friend)
+        return validated_data
+
+    def delete(self, validated_data):
+        friend = User.objects.get(id=validated_data["friend_id"])
+        user = self.context["request"].user
+        FriendShip.objects.filter(Q(user=user, friend=friend) | Q(user=friend, friend=user)).delete()
+        return validated_data
+
+
+class AcceptFriendSerializer(serializers.ModelSerializer):
+    friend_id = serializers.IntegerField(source='friend.id', write_only=True)
+
+    class Meta:
+        model = FriendShip
+        fields = ['friend_id']
+
+    def validate(self, attrs):
+        friend = attrs["friend"]["id"]
+        user = self.context["request"].user
+
+        friendship = FriendShip.objects.filter(user_id=friend, friend=user).first()
+        if not friendship:
+            raise serializers.ValidationError({"error": "ERROR.FRIENDS.FRIENDSHIP_NOT_FOUND"})
+        if friendship.accepted:
+            raise serializers.ValidationError({"error": "ERROR.FRIENDS.WAS_ACCEPTED"})
+        return friendship
 
 
 class LeaderboardSerializer(serializers.ModelSerializer):
