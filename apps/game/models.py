@@ -18,6 +18,8 @@ class Statistics(models.Model):
 
     num_matches_won = models.IntegerField(default=0)
 
+    num_matches_defeat = models.IntegerField(default=0)
+
     num_goals_scored = models.IntegerField(default=0)
 
     num_goals_against = models.IntegerField(default=0)
@@ -56,7 +58,7 @@ class Tournament(models.Model):
 
     user = models.ForeignKey("user.User", on_delete=models.CASCADE, null=True)
    
-    players = models.CharField(max_length=500)
+    players = models.JSONField()
 
     current_order_round = models.IntegerField(default=0)
 

@@ -10,6 +10,7 @@ class LocalMatchSerializer(serializers.ModelSerializer):
     num_goals_scored = serializers.IntegerField()
     num_goals_against = serializers.IntegerField()
     num_goals_stopped_a = serializers.IntegerField()
+    num_goals_stopped_b = serializers.IntegerField()
     time_played = serializers.DurationField()
 
     class Meta:

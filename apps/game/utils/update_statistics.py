@@ -1,8 +1,10 @@
 from ..models import Statistics, LocalMatch
 
-def calculate_win_match(user_statistics, match):
+def calculate_win_or_lose_match(user_statistics, match):
     if(match.num_goals_scored > match.num_goals_against):
         user_statistics.num_matches_won += 1
+    if(match.num_goals_scored < match.num_goals_against):
+        user_statistics.num_matches_defeat += 1
 
 def calculate_max_streak(user_statistics, match):
     current_streak = user_statistics.max_streak
@@ -15,11 +17,13 @@ def calculate_max_streak(user_statistics, match):
 def calculate_win_rate(user_statistics, match):
     num_matches = user_statistics.num_matches
     num_victories = user_statistics.num_matches_won
-        
-    if(num_matches > 0):
-        win_rate = (num_victories / num_matches) * 100
-    else:
+    num_defeat = user_statistics.num_matches_defeat
+    if(num_matches == 0):
         win_rate = 100
+    elif num_victories + num_defeat == 0:
+        win_rate = 100
+    else:
+        win_rate = (num_victories / (num_victories + num_defeat)) * 100
     return win_rate
     
 def calculate_punctuation(user_statistics, match):
@@ -33,7 +37,7 @@ def calculate_punctuation(user_statistics, match):
 def update_statistics(user, match):
     statistics = Statistics.objects.get(user=user)
 
-    calculate_win_match(statistics, match)
+    calculate_win_or_lose_match(statistics, match)
     statistics.num_matches += 1
     statistics.max_streak = calculate_max_streak(statistics, match)
 
