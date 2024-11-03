@@ -10,4 +10,5 @@ from .utils.update_statistics import update_statistics
 
 class GameViewSet(ModelViewSet):
     queryset = LocalMatch.objects.all()
+    http_method_names = ['post']
     serializer_class = LocalMatchSerializer
