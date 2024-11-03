@@ -220,6 +220,7 @@ class MeNeedTokenSerializer(serializers.ModelSerializer):
             'username',
             'email',
             'profile_img',
+            'two_factor_enabled',
             'banner',
             'visibility',
             'language',
