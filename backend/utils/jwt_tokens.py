@@ -8,6 +8,9 @@ from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from apps.user.models import RefreshToken
 from .read_keys import read_private_key, read_public_key
 
+ACCESS_TOKEN_EXPIRATION_TIME = 30  # minutes
+REFRESH_TOKEN_EXPIRATION_TIME = 40  # minutes
+
 
 def generate_access_token(user_id, user_email):
     private_key = read_private_key()
@@ -16,7 +19,7 @@ def generate_access_token(user_id, user_email):
     payload = {
         "user_id": user_id,
         "user_email": user_email,
-        "exp": now + datetime.timedelta(minutes=1),
+        "exp": now + datetime.timedelta(minutes=ACCESS_TOKEN_EXPIRATION_TIME),
         "iat": now,
     }
 
@@ -32,7 +35,7 @@ def generate_refresh_token(user_id, user_email):
     payload = {
         "user_id": user_id,
         "user_email": user_email,
-        "exp": now + datetime.timedelta(minutes=2),
+        "exp": now + datetime.timedelta(minutes=REFRESH_TOKEN_EXPIRATION_TIME),
         "iat": now,
     }
 
