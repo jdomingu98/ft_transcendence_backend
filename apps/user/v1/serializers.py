@@ -301,7 +301,7 @@ class UserLeaderboardSerializer(serializers.ModelSerializer):
 
     def get_leaderboard(self, obj):
         top_users = get_leaderboard_cached()
-        return LeaderboardSerializer(top_users, many=True).data
+        return LeaderboardSerializer(top_users, many=True, context=self.context).data
 
 
 class OTPSerializer(serializers.Serializer):
