@@ -175,7 +175,9 @@ class PasswordResetSerializer(serializers.Serializer):
 
 
 class RefreshTokenSerializer(serializers.Serializer):
+    # This refers to the refresh token
     token = serializers.CharField(write_only=True)
+
     access_token = serializers.CharField(read_only=True)
     refresh_token = serializers.CharField(read_only=True)
 
@@ -210,8 +212,18 @@ class OAuthCodeSerializer(serializers.Serializer):
     code = serializers.CharField(required=True)
 
 
-class MeNeedTokenSerializer(serializers.Serializer):
-    token = serializers.CharField(required=True)
+class MeNeedTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'username',
+            'email',
+            'profile_img',
+            'banner',
+            'visibility',
+            'language',
+        ]
 
 
 class FriendSerializer(serializers.ModelSerializer):

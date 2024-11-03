@@ -5,6 +5,7 @@ from .enums import Language, Visibility
 from django.core.exceptions import ValidationError
 from apps.game.models import Statistics
 
+
 class UserModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
