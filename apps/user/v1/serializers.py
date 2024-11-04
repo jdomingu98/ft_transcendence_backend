@@ -326,10 +326,10 @@ class LocalMatchSerializer(serializers.ModelSerializer):
         model = LocalMatch
         fields = (
             'id',
-            'time_played',
-            'against',
             'result',
+            'against',
             'earned',
+            'time_played',
         )
 
     def get_result(self, obj):
