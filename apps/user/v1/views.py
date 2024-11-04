@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from django.db.models import Q
 from backend.utils.oauth_utils import get_access_token, get_user_info, get_or_create_user
 from backend.utils.pass_reset_utils import send_reset_email
+from backend.utils.match import get_user_matches
 from ..models import RefreshToken, User, FriendShip
 from backend.utils.authentication import Authentication
 from rest_framework.permissions import IsAuthenticated
@@ -175,3 +176,26 @@ class UserViewSet(ModelViewSet):
         user.is_verified = True
         user.save()
         return redirect(os.getenv("FRONTEND_URL"))
+    
+    @action(methods=["GET"], detail=True, url_path="match", url_name="match")
+    def match(self, request, pk=None):
+        return get_user_matches(pk, request)
+
+class FriendsViewSet(ModelViewSet):
+    serializer_class = FriendSerializer
+    authentication_classes = [Authentication]
+    permission_classes = [IsAuthenticated]
+    queryset = FriendShip.objects.all()
+    http_method_names = ["post", "delete"]
+
+    @action(methods=["POST"], detail=False, url_path="accept", url_name="accept", serializer_class=AcceptFriendSerializer)
+    def accept(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        friendship: FriendShip = serializer.validated_data
+
+        friendship.accepted = True
+        with transaction.atomic():
+            friendship.save()
+            FriendShip.objects.create(user_id=request.user.id, friend_id=friendship.user_id, accepted=True)
+        return Response(status=status.HTTP_204_NO_CONTENT)
