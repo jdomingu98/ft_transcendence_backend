@@ -7,8 +7,9 @@ from rest_framework.decorators import action
 from django.db.models import Q
 from backend.utils.oauth_utils import get_access_token, get_user_info, get_or_create_user
 from backend.utils.pass_reset_utils import send_reset_email
-from backend.utils.match import get_user_matches
+from backend.utils.match_pagination import paginate_matches
 from ..models import RefreshToken, User, FriendShip
+from apps.game.models import LocalMatch
 from backend.utils.authentication import Authentication
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import redirect
@@ -34,7 +35,6 @@ from .serializers import (
     UserLeaderboardSerializer,
     RefreshTokenSerializer,
     RegisterSerializer,
-    LocalMatchSerializer,
 )
 
 
@@ -178,8 +178,11 @@ class UserViewSet(ModelViewSet):
         return redirect(os.getenv("FRONTEND_URL"))
     
     @action(methods=["GET"], detail=True, url_path="match", url_name="match")
-    def match(self, request, pk=None):
-        return get_user_matches(pk, request)
+    def match(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        matches = LocalMatch.objects.filter(Q(user_a=user)).order_by('-start_date')
+
+        return paginate_matches(matches, request)
 
 class FriendsViewSet(ModelViewSet):
     serializer_class = FriendSerializer
