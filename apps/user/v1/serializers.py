@@ -324,7 +324,7 @@ class LocalMatchSerializer(serializers.ModelSerializer):
     num_goals_against = serializers.IntegerField(read_only=True)
     num_goals_stopped_a = serializers.IntegerField(read_only=True)
     num_goals_stopped_b = serializers.IntegerField(read_only=True)
-    time_played = serializers.DurationField(read_only=True)
+    time_played = serializers.SerializerMethodField()
 
     class Meta:
         model = LocalMatch
@@ -337,3 +337,8 @@ class LocalMatchSerializer(serializers.ModelSerializer):
             'num_goals_stopped_b',
             'time_played',
         )
+    
+    def get_time_played(self, obj):
+        total_seconds = int(obj.time_played.total_seconds())
+        minutes, seconds = divmod(total_seconds, 60)
+        return f"{minutes:02}:{seconds:02}"
