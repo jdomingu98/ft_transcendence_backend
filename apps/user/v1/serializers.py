@@ -318,32 +318,23 @@ class OTPSerializer(serializers.Serializer):
 
 
 class LocalMatchSerializer(serializers.ModelSerializer):
-    result = serializers.SerializerMethodField()
-    earned = serializers.SerializerMethodField()
-    against = serializers.CharField(source='user_b', read_only=True)
 
+    user_b = serializers.CharField(read_only=True)
+    start_date = serializers.DateTimeField(read_only=True)
+    num_goals_scored = serializers.IntegerField(read_only=True)
+    num_goals_against = serializers.IntegerField(read_only=True)
+    num_goals_stopped_a = serializers.IntegerField(read_only=True)
+    num_goals_stopped_b = serializers.IntegerField(read_only=True)
+    time_played = serializers.DurationField(read_only=True)
+    
     class Meta:
         model = LocalMatch
         fields = (
-            'id',
-            'result',
-            'against',
-            'earned',
+            'user_b',
+            'start_date',
+            'num_goals_scored',
+            'num_goals_against',
+            'num_goals_stopped_a',
+            'num_goals_stopped_b',
             'time_played',
         )
-
-    def get_result(self, obj):
-        if obj.num_goals_scored > obj.num_goals_against:
-            return 'victory'
-        elif obj.num_goals_scored < obj.num_goals_against:
-            return 'defeat'
-        else:
-            return 'draw'
-
-    def get_earned(self, obj):
-        if obj.num_goals_scored > obj.num_goals_against:
-            return 10
-        elif obj.num_goals_scored < obj.num_goals_against:
-            return -5
-        else:
-            return 0
