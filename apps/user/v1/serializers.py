@@ -11,6 +11,7 @@ from rest_framework.validators import UniqueValidator
 from django.core.validators import RegexValidator, EmailValidator
 from backend.utils.mixins.custom_error_messages import FtErrorMessagesMixin
 from backend.utils import authentication
+from django.core.exceptions import ValidationError
 
 
 class RegisterSerializer(FtErrorMessagesMixin, serializers.ModelSerializer):
@@ -209,7 +210,10 @@ class ChangePasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError({"error": "ERROR.PASSWORD.DONT_MATCH"})
 
         user = User.objects.get(id=user_id)
-        authentication.validate_password(new_password, user)
+        try:
+            authentication.validate_password(new_password, user)
+        except ValidationError as e:
+            raise serializers.ValidationError({"error": e.message})
         return user
 
 
