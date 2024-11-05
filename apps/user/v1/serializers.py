@@ -213,7 +213,7 @@ class ChangePasswordSerializer(serializers.Serializer):
         try:
             authentication.validate_password(new_password, user)
         except ValidationError as e:
-            raise serializers.ValidationError({"error": e.message})
+            raise serializers.ValidationError({"error": e.messages})
         return user
 
 
