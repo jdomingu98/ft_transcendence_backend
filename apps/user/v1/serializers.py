@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from backend.utils.jwt_tokens import generate_new_tokens, generate_new_tokens_from_user, verify_token
 from ..models import User, FriendShip
+from apps.game.models import LocalMatch
 from backend.utils.leaderboard import get_leaderboard_cached
 from backend.utils.conf_reg_utils import send_conf_reg
 from rest_framework.validators import UniqueValidator
@@ -314,3 +315,30 @@ class OTPSerializer(serializers.Serializer):
             "refresh_token": refresh_token,
             "two_factor_enabled": instance.two_factor_enabled
         }
+
+
+class LocalMatchSerializer(serializers.ModelSerializer):
+    user_b = serializers.CharField(read_only=True)
+    start_date = serializers.DateTimeField(read_only=True)
+    num_goals_scored = serializers.IntegerField(read_only=True)
+    num_goals_against = serializers.IntegerField(read_only=True)
+    num_goals_stopped_a = serializers.IntegerField(read_only=True)
+    num_goals_stopped_b = serializers.IntegerField(read_only=True)
+    time_played = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LocalMatch
+        fields = (
+            'user_b',
+            'start_date',
+            'num_goals_scored',
+            'num_goals_against',
+            'num_goals_stopped_a',
+            'num_goals_stopped_b',
+            'time_played',
+        )
+    
+    def get_time_played(self, obj):
+        total_seconds = int(obj.time_played.total_seconds())
+        minutes, seconds = divmod(total_seconds, 60)
+        return f"{minutes:02}:{seconds:02}"
