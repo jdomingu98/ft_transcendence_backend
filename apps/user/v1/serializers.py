@@ -318,7 +318,6 @@ class OTPSerializer(serializers.Serializer):
 
 
 class LocalMatchSerializer(serializers.ModelSerializer):
-
     user_b = serializers.CharField(read_only=True)
     start_date = serializers.DateTimeField(read_only=True)
     num_goals_scored = serializers.IntegerField(read_only=True)
@@ -326,7 +325,7 @@ class LocalMatchSerializer(serializers.ModelSerializer):
     num_goals_stopped_a = serializers.IntegerField(read_only=True)
     num_goals_stopped_b = serializers.IntegerField(read_only=True)
     time_played = serializers.DurationField(read_only=True)
-    
+
     class Meta:
         model = LocalMatch
         fields = (
