@@ -110,7 +110,6 @@ class UserUpdateSerializer(FtErrorMessagesMixin, serializers.ModelSerializer):
         model = User
         fields = (
             "username",
-            "email",
             "profile_img",
             "banner",
             "visibility",
