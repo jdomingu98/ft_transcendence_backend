@@ -147,7 +147,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField(write_only=True)
+    username = serializers.CharField()
     password = serializers.CharField(write_only=True)
     access_token = serializers.CharField(read_only=True)
     refresh_token = serializers.CharField(read_only=True)
@@ -168,7 +168,8 @@ class LoginSerializer(serializers.Serializer):
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
-            "two_factor_enabled": instance.two_factor_enabled
+            "two_factor_enabled": instance.two_factor_enabled,
+            "username": instance.username,
         }
 
 
