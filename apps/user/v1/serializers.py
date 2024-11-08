@@ -105,7 +105,7 @@ class UserRetrieveSerializer(serializers.ModelSerializer):
         return f"{hours}h {minutes}m"
 
 
-class UserUpdateSerializer(serializers.ModelSerializer):
+class UserUpdateSerializer(FtErrorMessagesMixin, serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
@@ -117,6 +117,12 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             "language",
             "two_factor_enabled",
         )
+        ft_error_messages = {
+            'username': {
+                UniqueValidator: 'ERROR.USERNAME.ALREADY_EXISTS',
+                RegexValidator: 'ERROR.USERNAME.INVALID',
+            },
+        }
 
 
 class UserListSerializer(serializers.ModelSerializer):
