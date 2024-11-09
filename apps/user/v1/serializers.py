@@ -152,7 +152,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
+    username = serializers.CharField(write_only=True)
     password = serializers.CharField(write_only=True)
     access_token = serializers.CharField(read_only=True)
     refresh_token = serializers.CharField(read_only=True)
@@ -173,8 +173,7 @@ class LoginSerializer(serializers.Serializer):
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
-            "two_factor_enabled": instance.two_factor_enabled,
-            "username": instance.username,
+            "two_factor_enabled": instance.two_factor_enabled
         }
 
 
@@ -228,7 +227,7 @@ class OAuthCodeSerializer(serializers.Serializer):
 
 
 class MeNeedTokenSerializer(serializers.ModelSerializer):
-    is_42 = serializers.SerializerMethodField()
+    is42 = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -241,9 +240,10 @@ class MeNeedTokenSerializer(serializers.ModelSerializer):
             'banner',
             'visibility',
             'language',
+            'is42',
         ]
     
-    def get_is_42(self, obj):
+    def get_is42(self, obj):
         return obj.id42 is not None
 
 
