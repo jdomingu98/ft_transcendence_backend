@@ -228,6 +228,8 @@ class OAuthCodeSerializer(serializers.Serializer):
 
 
 class MeNeedTokenSerializer(serializers.ModelSerializer):
+    is_42 = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
@@ -240,6 +242,9 @@ class MeNeedTokenSerializer(serializers.ModelSerializer):
             'visibility',
             'language',
         ]
+    
+    def get_is_42(self, obj):
+        return obj.id42 is not None
 
 
 class FriendSerializer(serializers.ModelSerializer):
