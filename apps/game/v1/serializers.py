@@ -162,18 +162,23 @@ class TournamentMatchSerializer(serializers.Serializer):
     def validate_user_a(self, value):
         tournament = self.context["tournament"]
         if value not in tournament.players:
-            raise serializers.ValidationError("ERROR.USER.NOT_IN_TOURNAMENT")
+            raise serializers.ValidationError({"user_a": "ERROR.USER.NOT_IN_TOURNAMENT"})
         return value
     
     def validate_user_b(self, value):
         tournament = self.context["tournament"]
         if value not in tournament.players:
-            raise serializers.ValidationError("ERROR.USER.NOT_IN_TOURNAMENT")
+            raise serializers.ValidationError({"user_b": "ERROR.USER.NOT_IN_TOURNAMENT"})
         return value
 
     def validate(self, data):
-
-
-        if data["num_goals_scored"] < 0 or data["num_goals_against"] < 0:
-            raise serializers.ValidationError("ERROR.GOALS.INVALID")
+        if data["num_goals_scored"] < 0:
+            raise serializers.ValidationError({
+                "goals_scored": "ERROR.GOALS.INVALID"
+            })
+        
+        if data["num_goals_against"] < 0:
+            raise serializers.ValidationError({
+                "goals_against": "ERROR.GOALS.INVALID"
+            })
         return data
