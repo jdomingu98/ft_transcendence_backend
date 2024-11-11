@@ -35,6 +35,7 @@ from .serializers import (
     UserLeaderboardSerializer,
     RefreshTokenSerializer,
     RegisterSerializer,
+    CancelFriendRequestSerializer,
 )
 
 
@@ -201,4 +202,17 @@ class FriendsViewSet(ModelViewSet):
         with transaction.atomic():
             friendship.save()
             FriendShip.objects.create(user_id=request.user.id, friend_id=friendship.user_id, accepted=True)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(methods=["POST"], detail=False, url_path="cancel", url_name="cancel", serializer_class=CancelFriendRequestSerializer)
+    def cancel(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def destroy(self, request, *args, **kwargs):
+        friend = get_object_or_404(User, id=kwargs["pk"])
+        user = self.request.user
+        FriendShip.objects.filter(Q(user=user, friend=friend) | Q(user=friend, friend=user)).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

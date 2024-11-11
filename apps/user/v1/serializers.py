@@ -76,6 +76,8 @@ class UserRetrieveSerializer(serializers.ModelSerializer):
     punctuation = serializers.IntegerField(source="statistics.punctuation", read_only=True)
     time_played = serializers.SerializerMethodField()
     position = serializers.IntegerField(read_only=True)
+    is_friend = serializers.SerializerMethodField()
+    has_requested_friendship = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -96,6 +98,8 @@ class UserRetrieveSerializer(serializers.ModelSerializer):
             "num_goals_stopped",
             "punctuation",
             "position",
+            "is_friend",
+            "has_requested_friendship",
         )
 
     def get_time_played(self, obj):
@@ -104,6 +108,14 @@ class UserRetrieveSerializer(serializers.ModelSerializer):
         hours = int(total_seconds // 3600)
         minutes = int((total_seconds % 3600) // 60)
         return f"{hours}h {minutes}m"
+
+    def get_is_friend(self, obj):
+        user = self.context["request"].user
+        return FriendShip.objects.filter((Q(user=user, friend=obj) | Q(user=obj, friend=user)) & Q(accepted=True)).exists()
+
+    def get_has_requested_friendship(self, obj):
+        user = self.context["request"].user
+        return FriendShip.objects.filter(user=user, friend=obj, accepted=False).exists()
 
 
 class UserUpdateSerializer(FtErrorMessagesMixin, serializers.ModelSerializer):
@@ -272,12 +284,6 @@ class FriendSerializer(serializers.ModelSerializer):
         FriendShip.objects.get_or_create(user=user, friend=friend)
         return validated_data
 
-    def delete(self, validated_data):
-        friend = User.objects.get(id=validated_data["friend_id"])
-        user = self.context["request"].user
-        FriendShip.objects.filter(Q(user=user, friend=friend) | Q(user=friend, friend=user)).delete()
-        return validated_data
-
 
 class AcceptFriendSerializer(serializers.ModelSerializer):
     friend_id = serializers.IntegerField(source='friend.id', write_only=True)
@@ -296,6 +302,27 @@ class AcceptFriendSerializer(serializers.ModelSerializer):
         if friendship.accepted:
             raise serializers.ValidationError({"error": "ERROR.FRIENDS.WAS_ACCEPTED"})
         return friendship
+
+
+class CancelFriendRequestSerializer(serializers.ModelSerializer):
+    friend_id = serializers.IntegerField(source='friend.id', write_only=True)
+
+    class Meta:
+        model = FriendShip
+        fields = ['friend_id']
+
+    def validate(self, attrs):
+        friend = attrs["friend"]["id"]
+        user = self.context["request"].user
+
+        friendship = FriendShip.objects.filter(user=user, friend_id=friend, accepted=False).first()
+        if not friendship:
+            raise serializers.ValidationError({"error": "ERROR.FRIENDS.FRIENDSHIP_NOT_FOUND"})
+        return friendship
+
+    def delete(self):
+        self.validated_data.delete()
+        return self.validated_data
 
 
 class LeaderboardSerializer(serializers.ModelSerializer):
