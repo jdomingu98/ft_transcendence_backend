@@ -12,6 +12,7 @@ from rest_framework.validators import UniqueValidator
 from django.core.validators import RegexValidator, EmailValidator
 from backend.utils.mixins.custom_error_messages import FtErrorMessagesMixin
 from backend.utils import authentication
+from django.core.exceptions import ValidationError
 
 
 class RegisterSerializer(FtErrorMessagesMixin, serializers.ModelSerializer):
@@ -105,17 +106,23 @@ class UserRetrieveSerializer(serializers.ModelSerializer):
         return f"{hours}h {minutes}m"
 
 
-class UserUpdateSerializer(serializers.ModelSerializer):
+class UserUpdateSerializer(FtErrorMessagesMixin, serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            "email",
+            "username",
             "profile_img",
             "banner",
             "visibility",
             "language",
             "two_factor_enabled",
         )
+        ft_error_messages = {
+            'username': {
+                UniqueValidator: 'ERROR.USERNAME.ALREADY_EXISTS',
+                RegexValidator: 'ERROR.USERNAME.INVALID',
+            },
+        }
 
 
 class UserListSerializer(serializers.ModelSerializer):
@@ -196,16 +203,23 @@ class ChangePasswordSerializer(serializers.Serializer):
     change_password_token = serializers.CharField(write_only=True)
 
     def validate(self, data):
-        payload = verify_token(data["change_password_token"])
-        if not payload.get("change_password"):
-            raise serializers.ValidationError({"error": "ERROR.INVALID_TOKEN"})
+        if self.context["request"].user.is_authenticated:
+            user_id = self.context["request"].user.id
+        else:
+            payload = verify_token(data["change_password_token"])
+            if not payload.get("change_password"):
+                raise serializers.ValidationError({"error": "ERROR.INVALID_TOKEN"})
+            user_id = payload.get("user_id")
         new_password = data["new_password"]
         repeat_new_password = data["repeat_new_password"]
         if new_password != repeat_new_password:
             raise serializers.ValidationError({"error": "ERROR.PASSWORD.DONT_MATCH"})
 
-        user = User.objects.get(id=payload.get("user_id"))
-        authentication.validate_password(new_password, user)
+        user = User.objects.get(id=user_id)
+        try:
+            authentication.validate_password(new_password, user)
+        except ValidationError as e:
+            raise serializers.ValidationError({"error": e.messages})
         return user
 
 
@@ -214,6 +228,8 @@ class OAuthCodeSerializer(serializers.Serializer):
 
 
 class MeNeedTokenSerializer(serializers.ModelSerializer):
+    is42 = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
@@ -221,10 +237,15 @@ class MeNeedTokenSerializer(serializers.ModelSerializer):
             'username',
             'email',
             'profile_img',
+            'two_factor_enabled',
             'banner',
             'visibility',
             'language',
+            'is42',
         ]
+    
+    def get_is42(self, obj):
+        return obj.id42 is not None
 
 
 class FriendSerializer(serializers.ModelSerializer):
@@ -296,7 +317,7 @@ class UserLeaderboardSerializer(serializers.ModelSerializer):
 
     def get_leaderboard(self, obj):
         top_users = get_leaderboard_cached()
-        return LeaderboardSerializer(top_users, many=True).data
+        return LeaderboardSerializer(top_users, many=True, context=self.context).data
 
 
 class OTPSerializer(serializers.Serializer):

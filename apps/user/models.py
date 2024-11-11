@@ -27,9 +27,9 @@ class User(AbstractBaseUser):
 
     friends = models.ManyToManyField("user.User",through="user.FriendShip")
 
-    profile_img = models.FileField(max_length=200, null=True)
+    profile_img = models.FileField(max_length=200, null=True, upload_to="profile_images/")
 
-    banner = models.FileField(max_length=200, null=True)
+    banner = models.FileField(max_length=200, null=True, upload_to="profile_banners/")
 
     visibility = models.IntegerField(
         choices=[(tag.value, tag.name) for tag in Visibility],

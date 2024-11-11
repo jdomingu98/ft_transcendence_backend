@@ -17,8 +17,3 @@ class UserPermissions(BasePermission):
         if view.action in ACTIONS_THAT_DO_NOT_REQUIRE_AUTH:
             return True
         return request.user.is_authenticated
-
-    def has_object_permission(self, request, view, obj):
-        if request.user.is_authenticated and obj.user == request.user:
-            return True
-        return False
