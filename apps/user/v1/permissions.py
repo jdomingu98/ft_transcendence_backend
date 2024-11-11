@@ -5,7 +5,7 @@ ACTIONS_THAT_DO_NOT_REQUIRE_AUTH = [
     "login",
     "otp",
     "password_reset",
-    "refresh_token",
+    "refresh",
     "change_password",
     "oauth",
     "verify_account",

@@ -6,10 +6,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from backend.utils.tournament_utils import process_end_match
 
+
 class GameViewSet(ModelViewSet):
     queryset = LocalMatch.objects.all()
     http_method_names = ['post', 'get']
     serializer_class = LocalMatchSerializer
+
 
 class TournamentViewSet(ModelViewSet):
     queryset = Tournament.objects.all()
@@ -21,7 +23,7 @@ class TournamentViewSet(ModelViewSet):
         elif self.action == "end_match":
             return TournamentMatchSerializer
         return TournamentStatusSerializer
-    
+
     @action(detail=True, methods=['post'], url_path='end_match', url_name='end_match', serializer_class=TournamentMatchSerializer)
     def end_match(self, request, pk=None):
         tournament = self.get_object()

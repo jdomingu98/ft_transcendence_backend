@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from django.db.models import Q
 from backend.utils.oauth_utils import get_access_token, get_user_info, get_or_create_user
 from backend.utils.pass_reset_utils import send_reset_email
-from backend.utils.match_pagination import paginate_matches
+from backend.utils.pagination import paginate_matches
 from ..models import RefreshToken, User, FriendShip
 from apps.game.models import LocalMatch
 from backend.utils.authentication import Authentication
@@ -17,6 +17,7 @@ from apps.user.v1.filters import UserFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django.http import Http404
 import os
+from backend.utils.pagination import paginate
 from .permissions import UserPermissions
 from backend.utils.otp_utils import send_otp_code, verify_otp_code
 from .serializers import (
@@ -35,6 +36,7 @@ from .serializers import (
     UserLeaderboardSerializer,
     RefreshTokenSerializer,
     RegisterSerializer,
+    CancelFriendRequestSerializer,
 )
 
 
@@ -72,8 +74,13 @@ class UserViewSet(ModelViewSet):
         serializer.save()
         return Response(status=status.HTTP_202_ACCEPTED)
 
+    def list(self, request, *args, **kwargs):
+        users = self.filter_queryset(self.get_queryset())
+        if request.query_params.get("paginate"):
+            return paginate(users, request, self.get_serializer_class(), 12)
+        return Response(self.get_serializer(users[:50], many=True).data, status=status.HTTP_200_OK)
+
     def retrieve(self, request, pk=None):
-        """ TODO: Can Anon user see this? """
         try:
             user = self.get_object()
         except Http404:
@@ -82,7 +89,6 @@ class UserViewSet(ModelViewSet):
         user_list = User.objects.with_ranking()
 
         user_position = next((i for i, u in enumerate(user_list, 1) if u.id == user.id), None)
-
         serializer = self.get_serializer(user)
         data = serializer.data
         data['position'] = user_position
@@ -201,4 +207,17 @@ class FriendsViewSet(ModelViewSet):
         with transaction.atomic():
             friendship.save()
             FriendShip.objects.create(user_id=request.user.id, friend_id=friendship.user_id, accepted=True)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(methods=["POST"], detail=False, url_path="cancel", url_name="cancel", serializer_class=CancelFriendRequestSerializer)
+    def cancel(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def destroy(self, request, *args, **kwargs):
+        friend = get_object_or_404(User, id=kwargs["pk"])
+        user = self.request.user
+        FriendShip.objects.filter(Q(user=user, friend=friend) | Q(user=friend, friend=user)).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

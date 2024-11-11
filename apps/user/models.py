@@ -25,7 +25,7 @@ class User(AbstractBaseUser):
         unique=True,
     )
 
-    friends = models.ManyToManyField("user.User",through="user.FriendShip")
+    friends = models.ManyToManyField("user.User", through="user.FriendShip")
 
     profile_img = models.FileField(max_length=200, null=True, upload_to="profile_images/")
 
@@ -64,6 +64,7 @@ class OTPCode(models.Model):
 class RefreshToken(models.Model):
     token = models.CharField(max_length=1024, unique=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+
 
 class FriendShip(models.Model):
     user = models.ForeignKey("user.User", on_delete=models.CASCADE, related_name='friendships_requested')
