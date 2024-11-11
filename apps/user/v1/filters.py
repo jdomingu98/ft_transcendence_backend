@@ -1,4 +1,5 @@
 from django_filters import rest_framework as filters
+from django.db.models import Q
 from ..models import User
 
 
@@ -12,4 +13,7 @@ class UserFilter(filters.FilterSet):
         fields = ["friends", "username"]
 
     def filter_friends(self, queryset, name, value):
-        return queryset.filter(friends__id=value) if value else queryset
+        return queryset.filter(
+            Q(friendships_requested__friend=value, friendships_requested__accepted=True) | # noqa
+            Q(friendships_received__user=value, friendships_received__accepted=True)
+        ) if value else queryset
