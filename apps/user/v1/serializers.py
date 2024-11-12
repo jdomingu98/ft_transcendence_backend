@@ -5,12 +5,14 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from backend.utils.jwt_tokens import generate_new_tokens, generate_new_tokens_from_user, verify_token
 from ..models import User, FriendShip
+from apps.game.models import LocalMatch
 from backend.utils.leaderboard import get_leaderboard_cached
 from backend.utils.conf_reg_utils import send_conf_reg
 from rest_framework.validators import UniqueValidator
 from django.core.validators import RegexValidator, EmailValidator
 from backend.utils.mixins.custom_error_messages import FtErrorMessagesMixin
 from backend.utils import authentication
+from django.core.exceptions import ValidationError
 
 
 class RegisterSerializer(FtErrorMessagesMixin, serializers.ModelSerializer):
@@ -74,6 +76,8 @@ class UserRetrieveSerializer(serializers.ModelSerializer):
     punctuation = serializers.IntegerField(source="statistics.punctuation", read_only=True)
     time_played = serializers.SerializerMethodField()
     position = serializers.IntegerField(read_only=True)
+    is_friend = serializers.SerializerMethodField()
+    has_requested_friendship = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -94,6 +98,8 @@ class UserRetrieveSerializer(serializers.ModelSerializer):
             "num_goals_stopped",
             "punctuation",
             "position",
+            "is_friend",
+            "has_requested_friendship",
         )
 
     def get_time_played(self, obj):
@@ -103,18 +109,32 @@ class UserRetrieveSerializer(serializers.ModelSerializer):
         minutes = int((total_seconds % 3600) // 60)
         return f"{hours}h {minutes}m"
 
+    def get_is_friend(self, obj):
+        user = self.context["request"].user
+        return FriendShip.objects.filter((Q(user=user, friend=obj) | Q(user=obj, friend=user)) & Q(accepted=True)).exists()
 
-class UserUpdateSerializer(serializers.ModelSerializer):
+    def get_has_requested_friendship(self, obj):
+        user = self.context["request"].user
+        return FriendShip.objects.filter(user=user, friend=obj, accepted=False).exists()
+
+
+class UserUpdateSerializer(FtErrorMessagesMixin, serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            "email",
+            "username",
             "profile_img",
             "banner",
             "visibility",
             "language",
             "two_factor_enabled",
         )
+        ft_error_messages = {
+            'username': {
+                UniqueValidator: 'ERROR.USERNAME.ALREADY_EXISTS',
+                RegexValidator: 'ERROR.USERNAME.INVALID',
+            },
+        }
 
 
 class UserListSerializer(serializers.ModelSerializer):
@@ -175,7 +195,9 @@ class PasswordResetSerializer(serializers.Serializer):
 
 
 class RefreshTokenSerializer(serializers.Serializer):
+    # This refers to the refresh token
     token = serializers.CharField(write_only=True)
+
     access_token = serializers.CharField(read_only=True)
     refresh_token = serializers.CharField(read_only=True)
 
@@ -193,16 +215,23 @@ class ChangePasswordSerializer(serializers.Serializer):
     change_password_token = serializers.CharField(write_only=True)
 
     def validate(self, data):
-        payload = verify_token(data["change_password_token"])
-        if not payload.get("change_password"):
-            raise serializers.ValidationError({"error": "ERROR.INVALID_TOKEN"})
+        if self.context["request"].user.is_authenticated:
+            user_id = self.context["request"].user.id
+        else:
+            payload = verify_token(data["change_password_token"])
+            if not payload.get("change_password"):
+                raise serializers.ValidationError({"error": "ERROR.INVALID_TOKEN"})
+            user_id = payload.get("user_id")
         new_password = data["new_password"]
         repeat_new_password = data["repeat_new_password"]
         if new_password != repeat_new_password:
             raise serializers.ValidationError({"error": "ERROR.PASSWORD.DONT_MATCH"})
 
-        user = User.objects.get(id=payload.get("user_id"))
-        authentication.validate_password(new_password, user)
+        user = User.objects.get(id=user_id)
+        try:
+            authentication.validate_password(new_password, user)
+        except ValidationError as e:
+            raise serializers.ValidationError({"error": e.messages})
         return user
 
 
@@ -210,8 +239,25 @@ class OAuthCodeSerializer(serializers.Serializer):
     code = serializers.CharField(required=True)
 
 
-class MeNeedTokenSerializer(serializers.Serializer):
-    token = serializers.CharField(required=True)
+class MeNeedTokenSerializer(serializers.ModelSerializer):
+    is42 = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'username',
+            'email',
+            'profile_img',
+            'two_factor_enabled',
+            'banner',
+            'visibility',
+            'language',
+            'is42',
+        ]
+    
+    def get_is42(self, obj):
+        return obj.id42 is not None
 
 
 class FriendSerializer(serializers.ModelSerializer):
@@ -238,12 +284,6 @@ class FriendSerializer(serializers.ModelSerializer):
         FriendShip.objects.get_or_create(user=user, friend=friend)
         return validated_data
 
-    def delete(self, validated_data):
-        friend = User.objects.get(id=validated_data["friend_id"])
-        user = self.context["request"].user
-        FriendShip.objects.filter(Q(user=user, friend=friend) | Q(user=friend, friend=user)).delete()
-        return validated_data
-
 
 class AcceptFriendSerializer(serializers.ModelSerializer):
     friend_id = serializers.IntegerField(source='friend.id', write_only=True)
@@ -262,6 +302,27 @@ class AcceptFriendSerializer(serializers.ModelSerializer):
         if friendship.accepted:
             raise serializers.ValidationError({"error": "ERROR.FRIENDS.WAS_ACCEPTED"})
         return friendship
+
+
+class CancelFriendRequestSerializer(serializers.ModelSerializer):
+    friend_id = serializers.IntegerField(source='friend.id', write_only=True)
+
+    class Meta:
+        model = FriendShip
+        fields = ['friend_id']
+
+    def validate(self, attrs):
+        friend = attrs["friend"]["id"]
+        user = self.context["request"].user
+
+        friendship = FriendShip.objects.filter(user=user, friend_id=friend, accepted=False).first()
+        if not friendship:
+            raise serializers.ValidationError({"error": "ERROR.FRIENDS.FRIENDSHIP_NOT_FOUND"})
+        return friendship
+
+    def delete(self):
+        self.validated_data.delete()
+        return self.validated_data
 
 
 class LeaderboardSerializer(serializers.ModelSerializer):
@@ -283,7 +344,7 @@ class UserLeaderboardSerializer(serializers.ModelSerializer):
 
     def get_leaderboard(self, obj):
         top_users = get_leaderboard_cached()
-        return LeaderboardSerializer(top_users, many=True).data
+        return LeaderboardSerializer(top_users, many=True, context=self.context).data
 
 
 class OTPSerializer(serializers.Serializer):
@@ -302,3 +363,30 @@ class OTPSerializer(serializers.Serializer):
             "refresh_token": refresh_token,
             "two_factor_enabled": instance.two_factor_enabled
         }
+
+
+class LocalMatchSerializer(serializers.ModelSerializer):
+    user_b = serializers.CharField(read_only=True)
+    start_date = serializers.DateTimeField(read_only=True)
+    num_goals_scored = serializers.IntegerField(read_only=True)
+    num_goals_against = serializers.IntegerField(read_only=True)
+    num_goals_stopped_a = serializers.IntegerField(read_only=True)
+    num_goals_stopped_b = serializers.IntegerField(read_only=True)
+    time_played = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LocalMatch
+        fields = (
+            'user_b',
+            'start_date',
+            'num_goals_scored',
+            'num_goals_against',
+            'num_goals_stopped_a',
+            'num_goals_stopped_b',
+            'time_played',
+        )
+    
+    def get_time_played(self, obj):
+        total_seconds = int(obj.time_played.total_seconds())
+        minutes, seconds = divmod(total_seconds, 60)
+        return f"{minutes:02}:{seconds:02}"

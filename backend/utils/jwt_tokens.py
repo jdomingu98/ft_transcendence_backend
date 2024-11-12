@@ -8,8 +8,8 @@ from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from apps.user.models import RefreshToken
 from .read_keys import read_private_key, read_public_key
 
-ACCESS_TOKEN_EXPIRATION_TIME = 30  # minutes
-REFRESH_TOKEN_EXPIRATION_TIME = 40  # minutes
+ACCESS_TOKEN_EXPIRATION_TIME = 15  # minutes
+REFRESH_TOKEN_EXPIRATION_TIME = 60  # minutes
 
 
 def generate_access_token(user_id, user_email):
