@@ -7,6 +7,7 @@ import random
 import math
 from django.core.exceptions import ObjectDoesNotExist
 from apps.user.models import User
+from apps.user.models import Statistics
 
 
 class LocalMatchSerializer(serializers.ModelSerializer):
@@ -53,10 +54,11 @@ class LocalMatchSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        local_match = super().create(validated_data)
+        local_match: LocalMatch = super().create(validated_data)
         if not self.is_tournament(validated_data):
             user = validated_data.get("user")
-            update_statistics(user, local_match)
+            statistics = Statistics.objects.get(user=user)
+            update_statistics(statistics, local_match)
         return local_match
 
     def is_tournament(self, data):

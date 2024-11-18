@@ -183,7 +183,7 @@ class UserViewSet(ModelViewSet):
         user.is_verified = True
         user.save()
         return redirect(os.getenv("FRONTEND_URL"))
-    
+
     @action(methods=["GET"], detail=True, url_path="match", url_name="match")
     def match(self, request, pk):
         user = get_object_or_404(User, pk=pk)
