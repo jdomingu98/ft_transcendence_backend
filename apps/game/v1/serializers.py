@@ -1,3 +1,4 @@
+import re
 from rest_framework import serializers
 from ..models import LocalMatch, Tournament
 from ..utils.update_statistics import update_statistics
@@ -79,6 +80,33 @@ class LocalMatchSerializer(serializers.ModelSerializer):
 
         return True
 
+
+class ValidateMatchSerializer(serializers.Serializer):
+    user_a = serializers.CharField(write_only=True, required=False)
+    user_b = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        fields = ("user_a", "user_b")
+
+    def validate(self, data):
+        user_a = data.get("user_a")
+        user_b = data.get("user_b")
+        if user_a is not None and not self.is_valid_name(user_a):
+            raise ValidationError({"error": "ERROR.USER.INVALID"})
+        if not self.is_valid_name(user_b):
+            raise ValidationError({"error": "ERROR.USER.INVALID"})
+        if user_a is not None and user_a == user_b:
+            raise ValidationError({"error": "ERROR.USER.SAME"})
+        return data
+
+    def is_valid_name(self, name):
+        if User.objects.filter(username=name).exists():
+            return False
+        if not re.match(r"^[a-zA-Z0-9-]*$", name):
+            return False
+        return True
+
+
 class TournamentCreateSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=True)
     players = serializers.ListField(
@@ -103,7 +131,7 @@ class TournamentCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 "players": "ERROR.TOURNAMENT.INVALID_PLAYER_COUNT"
             })
-        
+
         return data
 
     def create(self, validated_data):
@@ -114,7 +142,7 @@ class TournamentCreateSerializer(serializers.ModelSerializer):
                 User.objects.get(id=user_id)
             except ObjectDoesNotExist:
                 raise ValidationError({"user_id": "ERROR.USER.NOT_FOUND"})
-        
+
         player_count = len(validated_data['players'])
         randomized_players = random.sample(validated_data['players'], player_count)
         total_round = int(math.log2(player_count))
@@ -164,7 +192,7 @@ class TournamentMatchSerializer(serializers.Serializer):
         if value not in tournament.players:
             raise serializers.ValidationError({"user_a": "ERROR.USER.NOT_IN_TOURNAMENT"})
         return value
-    
+
     def validate_user_b(self, value):
         tournament = self.context["tournament"]
         if value not in tournament.players:
@@ -173,12 +201,8 @@ class TournamentMatchSerializer(serializers.Serializer):
 
     def validate(self, data):
         if data["num_goals_scored"] < 0:
-            raise serializers.ValidationError({
-                "goals_scored": "ERROR.GOALS.INVALID"
-            })
-        
+            raise serializers.ValidationError({"goals_scored": "ERROR.GOALS.INVALID"})
+
         if data["num_goals_against"] < 0:
-            raise serializers.ValidationError({
-                "goals_against": "ERROR.GOALS.INVALID"
-            })
+            raise serializers.ValidationError({"goals_against": "ERROR.GOALS.INVALID"})
         return data

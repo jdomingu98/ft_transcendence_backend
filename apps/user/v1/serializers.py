@@ -255,7 +255,7 @@ class MeNeedTokenSerializer(serializers.ModelSerializer):
             'language',
             'is42',
         ]
-    
+
     def get_is42(self, obj):
         return obj.id42 is not None
 
