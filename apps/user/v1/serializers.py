@@ -304,6 +304,16 @@ class AcceptFriendSerializer(serializers.ModelSerializer):
         return friendship
 
 
+class MyRequestsFriendsSerializer(serializers.ModelSerializer):
+    profile_img = serializers.FileField(source='user.profile_img', read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
+    id = serializers.IntegerField(source='user.id', read_only=True)
+
+    class Meta:
+        model = FriendShip
+        fields = ['id', 'username', 'profile_img']
+
+
 class CancelFriendRequestSerializer(serializers.ModelSerializer):
     friend_id = serializers.IntegerField(source='friend.id', write_only=True)
 
