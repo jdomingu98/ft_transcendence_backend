@@ -11,11 +11,12 @@ from backend.utils.conf_reg_utils import send_conf_reg
 from rest_framework.validators import UniqueValidator
 from django.core.validators import RegexValidator, EmailValidator
 from backend.utils.mixins.custom_error_messages import FtErrorMessagesMixin
+from backend.utils.ft_model_serializer import FtModelSerializer
 from backend.utils import authentication
 from django.core.exceptions import ValidationError
 
 
-class RegisterSerializer(FtErrorMessagesMixin, serializers.ModelSerializer):
+class RegisterSerializer(FtErrorMessagesMixin, FtModelSerializer):
     repeat_password = serializers.CharField(max_length=255, write_only=True)
     password = serializers.CharField(max_length=255, write_only=True)
 
@@ -67,7 +68,7 @@ class RegisterSerializer(FtErrorMessagesMixin, serializers.ModelSerializer):
         return data
 
 
-class UserRetrieveSerializer(serializers.ModelSerializer):
+class UserRetrieveSerializer(FtModelSerializer):
     max_streak = serializers.IntegerField(source="statistics.max_streak", read_only=True)
     win_rate = serializers.IntegerField(source="statistics.win_rate", read_only=True)
     num_goals_scored = serializers.IntegerField(source="statistics.num_goals_scored", read_only=True)
@@ -118,7 +119,7 @@ class UserRetrieveSerializer(serializers.ModelSerializer):
         return FriendShip.objects.filter(user=user, friend=obj, accepted=False).exists()
 
 
-class UserUpdateSerializer(FtErrorMessagesMixin, serializers.ModelSerializer):
+class UserUpdateSerializer(FtErrorMessagesMixin, FtModelSerializer):
     class Meta:
         model = User
         fields = (
@@ -137,7 +138,7 @@ class UserUpdateSerializer(FtErrorMessagesMixin, serializers.ModelSerializer):
         }
 
 
-class UserListSerializer(serializers.ModelSerializer):
+class UserListSerializer(FtModelSerializer):
     class Meta:
         model = User
         fields = (
@@ -147,7 +148,7 @@ class UserListSerializer(serializers.ModelSerializer):
         )
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(FtModelSerializer):
     class Meta:
         model = User
         fields = [
@@ -239,7 +240,7 @@ class OAuthCodeSerializer(serializers.Serializer):
     code = serializers.CharField(required=True)
 
 
-class MeNeedTokenSerializer(serializers.ModelSerializer):
+class MeNeedTokenSerializer(FtModelSerializer):
     is42 = serializers.SerializerMethodField()
 
     class Meta:
@@ -335,7 +336,7 @@ class CancelFriendRequestSerializer(serializers.ModelSerializer):
         return self.validated_data
 
 
-class LeaderboardSerializer(serializers.ModelSerializer):
+class LeaderboardSerializer(FtModelSerializer):
     punctuation = serializers.IntegerField(source='statistics.punctuation')
 
     class Meta:
@@ -395,7 +396,7 @@ class LocalMatchSerializer(serializers.ModelSerializer):
             'num_goals_stopped_b',
             'time_played',
         )
-    
+
     def get_time_played(self, obj):
         total_seconds = int(obj.time_played.total_seconds())
         minutes, seconds = divmod(total_seconds, 60)
