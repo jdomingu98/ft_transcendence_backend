@@ -84,20 +84,23 @@ class LocalMatchSerializer(serializers.ModelSerializer):
 
 
 class ValidateMatchSerializer(serializers.Serializer):
-    user_a = serializers.CharField(write_only=True, required=False)
+    id = serializers.IntegerField(write_only=True, required=False)
+    user_a = serializers.CharField(write_only=True, required=True)
     user_b = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         fields = ("user_a", "user_b")
 
     def validate(self, data):
+        user_id = data.get("id")
         user_a = data.get("user_a")
         user_b = data.get("user_b")
-        if user_a is not None and not self.is_valid_name(user_a):
+
+        if user_id is None and not self.is_valid_name(user_a):
             raise ValidationError({"error": "ERROR.USER.INVALID"})
         if not self.is_valid_name(user_b):
             raise ValidationError({"error": "ERROR.USER.INVALID"})
-        if user_a is not None and user_a == user_b:
+        if user_a == user_b:
             raise ValidationError({"error": "ERROR.USER.SAME"})
         return data
 
