@@ -176,6 +176,8 @@ class LoginSerializer(serializers.Serializer):
         user = authenticate(username=data["username"], password=data["password"])
         if user is None:
             raise serializers.ValidationError({"error": "ERROR.USER.INVALID_LOGIN"})
+        user.is_connected = True
+        user.save()
         self.user = user
         return user
 
