@@ -20,6 +20,7 @@ import os
 from backend.utils.pagination import paginate
 from .permissions import UserPermissions
 from backend.utils.otp_utils import send_otp_code, verify_otp_code
+from apps.user.enums import Visibility
 from .serializers import (
     ChangePasswordSerializer,
     LoginSerializer,
@@ -51,8 +52,19 @@ class UserViewSet(ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        if self.action == "retrieve":
-            queryset = User.objects.with_ranking()
+
+        search = self.request.query_params.get("search", None)
+        user = self.request.user
+
+        if search:
+            queryset = queryset.filter(
+                Q(username__icontains=search) &
+                (Q(visibility=Visibility.PUBLIC.value) |
+                 (Q(visibility=Visibility.PRIVATE.value) & Q(friends=user)))
+            )
+
+        queryset = queryset.exclude(visibility=Visibility.ANONYMOUS.value)
+        
         return queryset
 
     def get_serializer_class(self):
