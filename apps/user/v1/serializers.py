@@ -255,6 +255,7 @@ class MeNeedTokenSerializer(FtModelSerializer):
             'two_factor_enabled',
             'banner',
             'visibility',
+            'is_connected',
             'language',
             'is42',
         ]
