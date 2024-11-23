@@ -51,8 +51,10 @@ class UserViewSet(ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+    
         if self.action == "retrieve":
             queryset = User.objects.with_ranking()
+        
         return queryset
 
     def get_serializer_class(self):
