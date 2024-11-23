@@ -14,6 +14,7 @@ from backend.utils.mixins.custom_error_messages import FtErrorMessagesMixin
 from backend.utils.ft_model_serializer import FtModelSerializer
 from backend.utils import authentication
 from django.core.exceptions import ValidationError
+from apps.user.enums import Visibility
 
 
 class RegisterSerializer(FtErrorMessagesMixin, FtModelSerializer):
@@ -85,12 +86,9 @@ class UserRetrieveSerializer(FtModelSerializer):
         fields = (
             "id",
             "username",
-            "email",
             "profile_img",
             "banner",
-            "visibility",
             "is_connected",
-            "language",
             "max_streak",
             "win_rate",
             "time_played",
@@ -117,6 +115,30 @@ class UserRetrieveSerializer(FtModelSerializer):
     def get_has_requested_friendship(self, obj):
         user = self.context["request"].user
         return FriendShip.objects.filter(user=user, friend=obj, accepted=False).exists()
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        request_user = self.context["request"].user
+
+        if (
+            instance.visibility == Visibility.ANONYMOUS.value or
+            (instance.visibility == Visibility.PRIVATE.value and
+            (request_user is None or not instance.friends.filter(id=request_user.id).exists()))
+        ):
+            representation["username"] = "Anonymous"
+            representation["profile_img"] = None
+            representation["banner"] = None
+            representation["is_connected"] = False
+            representation["max_streak"] = 0
+            representation["win_rate"] = 0
+            representation["time_played"] = "0h 0m"
+            representation["num_goals_scored"] = 0
+            representation["num_goals_against"] = 0
+            representation["num_goals_stopped"] = 0
+            representation["punctuation"] = 0
+            representation["position"] = None
+
+        return representation
 
 
 class UserUpdateSerializer(FtErrorMessagesMixin, FtModelSerializer):
@@ -146,6 +168,20 @@ class UserListSerializer(FtModelSerializer):
             "username",
             "profile_img",
         )
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        request_user = self.context.get('request').user if self.context.get('request') else None
+
+        if (
+            instance.visibility == Visibility.ANONYMOUS.value or
+            (instance.visibility == Visibility.PRIVATE.value and
+            (request_user is None or not instance.friends.filter(id=request_user.id).exists()))
+        ):
+            representation["username"] = "Anonymous"
+            representation["profile_img"] = None
+
+        return representation
 
 
 class UserSerializer(FtModelSerializer):
