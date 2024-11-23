@@ -120,6 +120,9 @@ class UserRetrieveSerializer(FtModelSerializer):
         representation = super().to_representation(instance)
         request_user = self.context["request"].user
 
+        if request_user and request_user.id == instance.id:
+            return representation
+
         if (
             instance.visibility == Visibility.ANONYMOUS.value or
             (instance.visibility == Visibility.PRIVATE.value and
@@ -172,6 +175,9 @@ class UserListSerializer(FtModelSerializer):
         representation = super().to_representation(instance)
 
         request_user = self.context.get('request').user if self.context.get('request') else None
+        
+        if request_user and request_user.id == instance.id:
+            return representation
 
         if (
             instance.visibility == Visibility.ANONYMOUS.value or
