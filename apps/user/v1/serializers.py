@@ -15,6 +15,7 @@ from backend.utils.ft_model_serializer import FtModelSerializer
 from backend.utils import authentication
 from django.core.exceptions import ValidationError
 from apps.user.enums import Visibility
+import os
 
 
 class RegisterSerializer(FtErrorMessagesMixin, FtModelSerializer):
@@ -161,6 +162,18 @@ class UserUpdateSerializer(FtErrorMessagesMixin, FtModelSerializer):
                 RegexValidator: 'ERROR.USERNAME.INVALID',
             },
         }
+    def update(self, instance, validated_data):
+        if 'profile_img' in validated_data:
+            old_profile_img = instance.profile_img
+            if old_profile_img and os.path.isfile(old_profile_img.path):
+                os.remove(old_profile_img.path)
+        
+        if 'banner' in validated_data:
+            old_banner = instance.banner
+            if old_banner and os.path.isfile(old_banner.path):
+                os.remove(old_banner.path)
+
+        return super().update(instance, validated_data)
 
 
 class UserListSerializer(FtModelSerializer):
@@ -205,7 +218,7 @@ class UserSerializer(FtModelSerializer):
             'id42',
             'two_factor_enabled',
         ]
-
+        
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(write_only=True)
