@@ -129,14 +129,14 @@ class TournamentCreateSerializer(serializers.ModelSerializer):
 
         if len(players) != len(set(players)):
             raise serializers.ValidationError({
-                "players": "ERROR.TOURNAMENT.DUPLICATE_PLAYER_NAMES"
+                "error": "ERROR.TOURNAMENT.DUPLICATE_PLAYER_NAMES"
             })
 
         player_count = len(players)
         valid_player_counts = {2, 4, 8, 16, 32}
         if player_count not in valid_player_counts:
             raise serializers.ValidationError({
-                "players": "ERROR.TOURNAMENT.INVALID_PLAYER_COUNT"
+                "error": "ERROR.TOURNAMENT.INVALID_PLAYER_COUNT"
             })
 
         regex_validator = RegexValidator(
@@ -146,15 +146,15 @@ class TournamentCreateSerializer(serializers.ModelSerializer):
         )
 
         for player in players:
-            if len(player) > 50:
+            if len(player) > 20:
                 raise serializers.ValidationError({
-                    "players": "ERROR.USER.USERNAME_TOO_LONG"
+                    "error": "ERROR.USER.INVALID"
                 })
             try:
                 regex_validator(player)
             except Exception:
                 raise serializers.ValidationError({
-                    "players": "ERROR.USER.INVALID_USERNAME"
+                    "error": "ERROR.USER.INVALID"
                 })
 
         return data
