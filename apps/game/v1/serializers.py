@@ -8,6 +8,7 @@ import math
 from django.core.exceptions import ObjectDoesNotExist
 from apps.user.models import User
 from apps.user.models import Statistics
+from django.core.validators import RegexValidator
 
 
 class LocalMatchSerializer(serializers.ModelSerializer):
@@ -125,17 +126,36 @@ class TournamentCreateSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         players = data.get('players')
+
         if len(players) != len(set(players)):
             raise serializers.ValidationError({
-                "players": "ERROR.TOURNAMENT.DUPLICATE_PLAYER_NAMES"
+                "error": "ERROR.TOURNAMENT.DUPLICATE_PLAYER_NAMES"
             })
 
         player_count = len(players)
         valid_player_counts = {2, 4, 8, 16, 32}
         if player_count not in valid_player_counts:
             raise serializers.ValidationError({
-                "players": "ERROR.TOURNAMENT.INVALID_PLAYER_COUNT"
+                "error": "ERROR.TOURNAMENT.INVALID_PLAYER_COUNT"
             })
+
+        regex_validator = RegexValidator(
+            regex=r"^[a-zA-Z0-9-]*$",
+            message="Username must be alphanumeric or contain hyphens",
+            code="invalid_username",
+        )
+
+        for player in players:
+            if len(player) > 20:
+                raise serializers.ValidationError({
+                    "error": "ERROR.USER.INVALID"
+                })
+            try:
+                regex_validator(player)
+            except Exception:
+                raise serializers.ValidationError({
+                    "error": "ERROR.USER.INVALID"
+                })
 
         return data
 
