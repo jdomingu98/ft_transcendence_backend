@@ -5,6 +5,7 @@ from django.core.validators import RegexValidator
 from .enums import Language, Visibility
 from apps.game.models import Statistics
 from .manager import UserManager
+import os
 
 
 class User(AbstractBaseUser):
@@ -53,6 +54,14 @@ class User(AbstractBaseUser):
         super().save(*args, **kwargs)
         if not hasattr(self, 'statistics'):
             Statistics.objects.create(user=self)
+    def delete(self, *args, **kwargs):
+        if self.profile_img:
+            if os.path.isfile(self.profile_img.path):
+                os.remove(self.profile_img.path)
+        if self.banner:
+            if os.path.isfile(self.banner.path):
+                os.remove(self.banner.path)
+        super().delete(*args, **kwargs)
 
 
 class OTPCode(models.Model):
