@@ -41,6 +41,8 @@ def get_or_create_user(user_info):
         return None
     
     if filterUser:
+        filterUser.is_connected = True
+        filterUser.save()
         return filterUser
 
     if User.objects.filter(username=username).exists():
