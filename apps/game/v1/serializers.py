@@ -85,7 +85,7 @@ class LocalMatchSerializer(serializers.ModelSerializer):
 
 
 class ValidateMatchSerializer(serializers.Serializer):
-    id = serializers.IntegerField(write_only=True, required=False)
+    id = serializers.IntegerField(write_only=True, allow_null=True, required=False)
     user_a = serializers.CharField(write_only=True, required=True)
     user_b = serializers.CharField(write_only=True, required=True)
 
