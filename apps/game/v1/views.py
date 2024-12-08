@@ -1,6 +1,12 @@
 from rest_framework.viewsets import ModelViewSet
 from ..models import LocalMatch, Tournament
-from .serializers import LocalMatchSerializer, TournamentCreateSerializer, TournamentStatusSerializer, TournamentMatchSerializer
+from .serializers import (
+    LocalMatchSerializer,
+    TournamentCreateSerializer,
+    TournamentStatusSerializer,
+    TournamentMatchSerializer,
+    ValidateMatchSerializer,
+)
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
@@ -11,6 +17,12 @@ class GameViewSet(ModelViewSet):
     queryset = LocalMatch.objects.all()
     http_method_names = ['post', 'get']
     serializer_class = LocalMatchSerializer
+
+    @action(detail=False, methods=['POST'], url_path='validate_match', url_name='validate_match', serializer_class=ValidateMatchSerializer)
+    def validate_match(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TournamentViewSet(ModelViewSet):

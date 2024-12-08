@@ -16,4 +16,4 @@ class UserFilter(filters.FilterSet):
         return queryset.filter(
             Q(friendships_requested__friend=value, friendships_requested__accepted=True) | # noqa
             Q(friendships_received__user=value, friendships_received__accepted=True)
-        ) if value else queryset
+        ).distinct() if value else queryset

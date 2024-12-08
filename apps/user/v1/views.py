@@ -36,6 +36,7 @@ from .serializers import (
     UserLeaderboardSerializer,
     RefreshTokenSerializer,
     RegisterSerializer,
+    MyRequestsFriendsSerializer,
     CancelFriendRequestSerializer,
 )
 
@@ -50,8 +51,10 @@ class UserViewSet(ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+    
         if self.action == "retrieve":
             queryset = User.objects.with_ranking()
+        
         return queryset
 
     def get_serializer_class(self):
@@ -182,7 +185,7 @@ class UserViewSet(ModelViewSet):
         user.is_verified = True
         user.save()
         return redirect(os.getenv("FRONTEND_URL"))
-    
+
     @action(methods=["GET"], detail=True, url_path="match", url_name="match")
     def match(self, request, pk):
         user = get_object_or_404(User, pk=pk)
@@ -190,12 +193,13 @@ class UserViewSet(ModelViewSet):
 
         return paginate_matches(matches, request)
 
+
 class FriendsViewSet(ModelViewSet):
     serializer_class = FriendSerializer
     authentication_classes = [Authentication]
     permission_classes = [IsAuthenticated]
     queryset = FriendShip.objects.all()
-    http_method_names = ["post", "delete"]
+    http_method_names = ["get", "post", "delete"]
 
     @action(methods=["POST"], detail=False, url_path="accept", url_name="accept", serializer_class=AcceptFriendSerializer)
     def accept(self, request, *args, **kwargs):
@@ -215,6 +219,12 @@ class FriendsViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(methods=["GET"], detail=False, url_path="requests", url_name="requests", serializer_class=MyRequestsFriendsSerializer)
+    def requests(self, request, *args, **kwargs):
+        user = self.request.user
+        friends = FriendShip.objects.filter(friend=user, accepted=False)
+        return Response(self.get_serializer(friends, many=True).data, status=status.HTTP_200_OK)
 
     def destroy(self, request, *args, **kwargs):
         friend = get_object_or_404(User, id=kwargs["pk"])

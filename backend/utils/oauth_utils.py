@@ -41,11 +41,13 @@ def get_or_create_user(user_info):
         return None
     
     if filterUser:
+        filterUser.is_connected = True
+        filterUser.save()
         return filterUser
 
     if User.objects.filter(username=username).exists():
         username = f"{username}_42"
 
-    user = User.objects.create(id42=id_42, username=username, email=email)
+    user = User.objects.create(id42=id_42, username=username, email=email, is_verified=True, is_connected=True)
 
     return user

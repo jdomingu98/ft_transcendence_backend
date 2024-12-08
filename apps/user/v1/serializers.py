@@ -11,11 +11,14 @@ from backend.utils.conf_reg_utils import send_conf_reg
 from rest_framework.validators import UniqueValidator
 from django.core.validators import RegexValidator, EmailValidator
 from backend.utils.mixins.custom_error_messages import FtErrorMessagesMixin
+from backend.utils.ft_model_serializer import FtModelSerializer
 from backend.utils import authentication
 from django.core.exceptions import ValidationError
+from apps.user.enums import Visibility
+import os
 
 
-class RegisterSerializer(FtErrorMessagesMixin, serializers.ModelSerializer):
+class RegisterSerializer(FtErrorMessagesMixin, FtModelSerializer):
     repeat_password = serializers.CharField(max_length=255, write_only=True)
     password = serializers.CharField(max_length=255, write_only=True)
 
@@ -67,7 +70,7 @@ class RegisterSerializer(FtErrorMessagesMixin, serializers.ModelSerializer):
         return data
 
 
-class UserRetrieveSerializer(serializers.ModelSerializer):
+class UserRetrieveSerializer(FtModelSerializer):
     max_streak = serializers.IntegerField(source="statistics.max_streak", read_only=True)
     win_rate = serializers.IntegerField(source="statistics.win_rate", read_only=True)
     num_goals_scored = serializers.IntegerField(source="statistics.num_goals_scored", read_only=True)
@@ -84,12 +87,9 @@ class UserRetrieveSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "username",
-            "email",
             "profile_img",
             "banner",
-            "visibility",
             "is_connected",
-            "language",
             "max_streak",
             "win_rate",
             "time_played",
@@ -116,9 +116,36 @@ class UserRetrieveSerializer(serializers.ModelSerializer):
     def get_has_requested_friendship(self, obj):
         user = self.context["request"].user
         return FriendShip.objects.filter(user=user, friend=obj, accepted=False).exists()
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        request_user = self.context["request"].user
+
+        if request_user and request_user.id == instance.id:
+            return representation
+
+        if (
+            instance.visibility == Visibility.ANONYMOUS.value or
+            (instance.visibility == Visibility.PRIVATE.value and
+            (request_user is None or not instance.friends.filter(id=request_user.id).exists()))
+        ):
+            representation["username"] = "Anonymous"
+            representation["profile_img"] = None
+            representation["banner"] = None
+            representation["is_connected"] = False
+            representation["max_streak"] = 0
+            representation["win_rate"] = 0
+            representation["time_played"] = "0h 0m"
+            representation["num_goals_scored"] = 0
+            representation["num_goals_against"] = 0
+            representation["num_goals_stopped"] = 0
+            representation["punctuation"] = 0
+            representation["position"] = None
+
+        return representation
 
 
-class UserUpdateSerializer(FtErrorMessagesMixin, serializers.ModelSerializer):
+class UserUpdateSerializer(FtErrorMessagesMixin, FtModelSerializer):
     class Meta:
         model = User
         fields = (
@@ -135,9 +162,21 @@ class UserUpdateSerializer(FtErrorMessagesMixin, serializers.ModelSerializer):
                 RegexValidator: 'ERROR.USERNAME.INVALID',
             },
         }
+    def update(self, instance, validated_data):
+        if 'profile_img' in validated_data:
+            old_profile_img = instance.profile_img
+            if old_profile_img and os.path.isfile(old_profile_img.path):
+                os.remove(old_profile_img.path)
+        
+        if 'banner' in validated_data:
+            old_banner = instance.banner
+            if old_banner and os.path.isfile(old_banner.path):
+                os.remove(old_banner.path)
+
+        return super().update(instance, validated_data)
 
 
-class UserListSerializer(serializers.ModelSerializer):
+class UserListSerializer(FtModelSerializer):
     class Meta:
         model = User
         fields = (
@@ -145,9 +184,26 @@ class UserListSerializer(serializers.ModelSerializer):
             "username",
             "profile_img",
         )
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        request_user = self.context.get('request').user if self.context.get('request') else None
+        
+        if request_user and request_user.id == instance.id:
+            return representation
+
+        if (
+            instance.visibility == Visibility.ANONYMOUS.value or
+            (instance.visibility == Visibility.PRIVATE.value and
+            (request_user is None or not instance.friends.filter(id=request_user.id).exists()))
+        ):
+            representation["username"] = "Anonymous"
+            representation["profile_img"] = None
+
+        return representation
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(FtModelSerializer):
     class Meta:
         model = User
         fields = [
@@ -162,7 +218,7 @@ class UserSerializer(serializers.ModelSerializer):
             'id42',
             'two_factor_enabled',
         ]
-
+        
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(write_only=True)
@@ -175,6 +231,8 @@ class LoginSerializer(serializers.Serializer):
         user = authenticate(username=data["username"], password=data["password"])
         if user is None:
             raise serializers.ValidationError({"error": "ERROR.USER.INVALID_LOGIN"})
+        user.is_connected = True
+        user.save()
         self.user = user
         return user
 
@@ -239,7 +297,7 @@ class OAuthCodeSerializer(serializers.Serializer):
     code = serializers.CharField(required=True)
 
 
-class MeNeedTokenSerializer(serializers.ModelSerializer):
+class MeNeedTokenSerializer(FtModelSerializer):
     is42 = serializers.SerializerMethodField()
 
     class Meta:
@@ -252,10 +310,11 @@ class MeNeedTokenSerializer(serializers.ModelSerializer):
             'two_factor_enabled',
             'banner',
             'visibility',
+            'is_connected',
             'language',
             'is42',
         ]
-    
+
     def get_is42(self, obj):
         return obj.id42 is not None
 
@@ -304,6 +363,16 @@ class AcceptFriendSerializer(serializers.ModelSerializer):
         return friendship
 
 
+class MyRequestsFriendsSerializer(serializers.ModelSerializer):
+    profile_img = serializers.FileField(source='user.profile_img', read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
+    id = serializers.IntegerField(source='user.id', read_only=True)
+
+    class Meta:
+        model = FriendShip
+        fields = ['id', 'username', 'profile_img']
+
+
 class CancelFriendRequestSerializer(serializers.ModelSerializer):
     friend_id = serializers.IntegerField(source='friend.id', write_only=True)
 
@@ -325,7 +394,7 @@ class CancelFriendRequestSerializer(serializers.ModelSerializer):
         return self.validated_data
 
 
-class LeaderboardSerializer(serializers.ModelSerializer):
+class LeaderboardSerializer(FtModelSerializer):
     punctuation = serializers.IntegerField(source='statistics.punctuation')
 
     class Meta:
@@ -385,7 +454,7 @@ class LocalMatchSerializer(serializers.ModelSerializer):
             'num_goals_stopped_b',
             'time_played',
         )
-    
+
     def get_time_played(self, obj):
         total_seconds = int(obj.time_played.total_seconds())
         minutes, seconds = divmod(total_seconds, 60)

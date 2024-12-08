@@ -26,9 +26,11 @@ def create_reset_link(user_id: int) -> str:
 def send_reset_email(user: User):
     reset_link = create_reset_link(user.id)
     emails = EmailSender()
+    template_name = f"changePassword/{user.language}.html"
+
     emails.send_email_template(
         user.email,
         "Recover Password Request",
-        "changePassword.html",
+        template_name,
         {"username": user.username, "reset_link": reset_link},
     )

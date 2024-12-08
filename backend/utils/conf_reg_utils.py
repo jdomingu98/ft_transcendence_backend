@@ -8,9 +8,11 @@ def create_verify_link(user: User) -> str:
 
 
 def send_conf_reg(user: User):
+    template_name = f"confirmRegistration/{user.language}.html"
+
     EmailSender().send_email_template(
         user.email,
         "Almost There! Confirm Your Account",
-        "confirmRegistration.html",
+        template_name,
         {"username": user.username, "verify_link": create_verify_link(user)},
     )

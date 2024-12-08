@@ -25,10 +25,12 @@ def send_otp_code(user: User):
         user=user
     )
 
+    template_name = f"oneTimePassword/{user.language}.html"
+
     EmailSender().send_email_template(
         user.email,
         "Your two-factor sign in code",
-        "oneTimePassword.html",
+        template_name,
         {"code": code}
     )
 

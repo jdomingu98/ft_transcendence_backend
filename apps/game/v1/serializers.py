@@ -1,3 +1,4 @@
+import re
 from rest_framework import serializers
 from ..models import LocalMatch, Tournament
 from ..utils.update_statistics import update_statistics
@@ -6,6 +7,8 @@ import random
 import math
 from django.core.exceptions import ObjectDoesNotExist
 from apps.user.models import User
+from apps.user.models import Statistics
+from django.core.validators import RegexValidator
 
 
 class LocalMatchSerializer(serializers.ModelSerializer):
@@ -52,10 +55,11 @@ class LocalMatchSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        local_match = super().create(validated_data)
+        local_match: LocalMatch = super().create(validated_data)
         if not self.is_tournament(validated_data):
             user = validated_data.get("user")
-            update_statistics(user, local_match)
+            statistics = Statistics.objects.get(user=user)
+            update_statistics(statistics, local_match)
         return local_match
 
     def is_tournament(self, data):
@@ -79,6 +83,36 @@ class LocalMatchSerializer(serializers.ModelSerializer):
 
         return True
 
+
+class ValidateMatchSerializer(serializers.Serializer):
+    id = serializers.IntegerField(write_only=True, allow_null=True, required=False)
+    user_a = serializers.CharField(write_only=True, required=True)
+    user_b = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        fields = ("user_a", "user_b")
+
+    def validate(self, data):
+        user_id = data.get("id")
+        user_a = data.get("user_a")
+        user_b = data.get("user_b")
+
+        if user_id is None and not self.is_valid_name(user_a):
+            raise ValidationError({"error": "ERROR.USER.INVALID"})
+        if not self.is_valid_name(user_b):
+            raise ValidationError({"error": "ERROR.USER.INVALID"})
+        if user_a == user_b:
+            raise ValidationError({"error": "ERROR.USER.SAME"})
+        return data
+
+    def is_valid_name(self, name):
+        if User.objects.filter(username=name).exists():
+            return False
+        if not re.match(r"^[a-zA-Z0-9-]*$", name):
+            return False
+        return True
+
+
 class TournamentCreateSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=True)
     players = serializers.ListField(
@@ -92,18 +126,37 @@ class TournamentCreateSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         players = data.get('players')
+
         if len(players) != len(set(players)):
             raise serializers.ValidationError({
-                "players": "ERROR.TOURNAMENT.DUPLICATE_PLAYER_NAMES"
+                "error": "ERROR.TOURNAMENT.DUPLICATE_PLAYER_NAMES"
             })
 
         player_count = len(players)
         valid_player_counts = {2, 4, 8, 16, 32}
         if player_count not in valid_player_counts:
             raise serializers.ValidationError({
-                "players": "ERROR.TOURNAMENT.INVALID_PLAYER_COUNT"
+                "error": "ERROR.TOURNAMENT.INVALID_PLAYER_COUNT"
             })
-        
+
+        regex_validator = RegexValidator(
+            regex=r"^[a-zA-Z0-9-]*$",
+            message="Username must be alphanumeric or contain hyphens",
+            code="invalid_username",
+        )
+
+        for player in players:
+            if len(player) > 20:
+                raise serializers.ValidationError({
+                    "error": "ERROR.USER.INVALID"
+                })
+            try:
+                regex_validator(player)
+            except Exception:
+                raise serializers.ValidationError({
+                    "error": "ERROR.USER.INVALID"
+                })
+
         return data
 
     def create(self, validated_data):
@@ -114,7 +167,7 @@ class TournamentCreateSerializer(serializers.ModelSerializer):
                 User.objects.get(id=user_id)
             except ObjectDoesNotExist:
                 raise ValidationError({"user_id": "ERROR.USER.NOT_FOUND"})
-        
+
         player_count = len(validated_data['players'])
         randomized_players = random.sample(validated_data['players'], player_count)
         total_round = int(math.log2(player_count))
@@ -164,7 +217,7 @@ class TournamentMatchSerializer(serializers.Serializer):
         if value not in tournament.players:
             raise serializers.ValidationError({"user_a": "ERROR.USER.NOT_IN_TOURNAMENT"})
         return value
-    
+
     def validate_user_b(self, value):
         tournament = self.context["tournament"]
         if value not in tournament.players:
@@ -173,12 +226,8 @@ class TournamentMatchSerializer(serializers.Serializer):
 
     def validate(self, data):
         if data["num_goals_scored"] < 0:
-            raise serializers.ValidationError({
-                "goals_scored": "ERROR.GOALS.INVALID"
-            })
-        
+            raise serializers.ValidationError({"goals_scored": "ERROR.GOALS.INVALID"})
+
         if data["num_goals_against"] < 0:
-            raise serializers.ValidationError({
-                "goals_against": "ERROR.GOALS.INVALID"
-            })
+            raise serializers.ValidationError({"goals_against": "ERROR.GOALS.INVALID"})
         return data

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='UTF-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+        <title>请求恢复密码</title>
+        <style>
+            * {
+                box-sizing: border-box;
+                font-family: Arial, sans-serif;
+                color: white;
+                text-align: center;
+                letter-spacing: 2px;
+            }
+        
+            body, html {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                background-color: #000235;
+                padding: 4rem;
+            }
+        
+            button {
+                cursor: pointer;
+                background-color: #ABD9D9;
+                border-radius: 20px;
+                padding: 1rem 2rem;
+                font-size: 1rem;
+                font-weight: bolder;
+                text-transform: uppercase;
+                color: black;
+                text-decoration: none;
+                display: inline-block;
+                margin: 1rem 0 2rem 0rem;
+            }
+        
+            h1 {
+                font-size: 1.8rem;
+                line-height: 2.5rem;
+                margin: 1.5rem 0 1.5rem 0;
+                padding: 0 1.3rem;
+            }
+        
+            main {
+                position: relative;
+                width: 100%;
+                height: 100vh;
+            }
+        
+            p {
+                font-size: 1.1rem;
+                line-height: 1.8rem;
+            }
+        
+            .card {
+                position: absolute;
+                top: 20%;
+                left: 50%;
+                transform: translate(-50%, -20%);
+                background-color: #13124F;
+                border-radius: 20px;
+                padding: 1rem;
+                max-width: 500px;
+                margin: 0 auto;
+                box-shadow: 0px 4px 12px rgba(255, 255, 255, 0.2);
+            }
+        
+            .card-body {
+                gap: 1.5rem;
+            }
+        
+            .intro, .outro {
+                padding: 0 1rem;
+            }
+
+            .outro {
+                font-size: 0.8rem;
+                opacity: 60%;
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <div class='card'>
+                <img src="https://i.imgur.com/oXAG2ND.png" alt="transcendence logo" style="width: 90px; margin-top: 15px;">
+                <h1>嗨 {{username}}! </h1>
+                <div class='card-body'>
+                    <p class='intro'>
+                        首先，欢迎来到  Transcendence!<br><br>
+                        我们很高兴您能加入我们。<br><br>
+                        要完成注册，我们只需确认你就是你。
+                    </p>
+                    <p class='outro' style="margin-top: 2rem;">点击下面的链接确认您的电子邮件地址：</p>
+                    <form action="{{verify_link}}" method="POST">
+                        <button type="submit">完成注册</button>
+                    </form>
+                    <p class='outro'>
+                        如果您没有在我们的网站上申请注册账户，请忽略此信息。
+                    </p>
+                </div>
+            </div>
+        </main>
+    </body>
+</html>
